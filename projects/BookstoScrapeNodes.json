@@ -1,0 +1,275 @@
+{
+    "id": 88935872,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 73153264,
+            "title": "Start",
+            "pos_x": -900.0,
+            "pos_y": -219.0,
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": 73188640,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "https://books.toscrape.com/"
+            },
+            "op_code": 1
+        },
+        {
+            "id": 73153288,
+            "title": "Get Item",
+            "pos_x": 288.0,
+            "pos_y": -388.0,
+            "inputs": [
+                {
+                    "id": 73188760,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 73188784,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//h1/text()"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 73189288,
+            "title": "Pagination",
+            "pos_x": -529.0,
+            "pos_y": -31.0,
+            "inputs": [
+                {
+                    "id": 73189408,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 73189432,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//a[text()=\"next\"]/@href"
+            },
+            "op_code": 3
+        },
+        {
+            "id": 73189264,
+            "title": "Hop All Links",
+            "pos_x": -125.0,
+            "pos_y": 62.0,
+            "inputs": [
+                {
+                    "id": 73189552,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 73189576,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//h3/a/@href"
+            },
+            "op_code": 5
+        },
+        {
+            "id": 73189480,
+            "title": "Output",
+            "pos_x": 942.0,
+            "pos_y": -56.75,
+            "inputs": [
+                {
+                    "id": 73189696,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 2,
+                    "socket_type": 1
+                }
+            ],
+            "outputs": [],
+            "content": {},
+            "op_code": 2
+        },
+        {
+            "id": 73339736,
+            "title": "Get Item",
+            "pos_x": 323.75,
+            "pos_y": -163.5,
+            "inputs": [
+                {
+                    "id": 73339808,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 73339832,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//*[@class=\"price_color\"]/text()"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 73340024,
+            "title": "Get Item",
+            "pos_x": 319.0,
+            "pos_y": 123.5,
+            "inputs": [
+                {
+                    "id": 73340192,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 73339928,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//*[contains(@class, \"star-rating\")]/@class"
+            },
+            "op_code": 7
+        },
+        {
+            "id": 73339664,
+            "title": "Get Item",
+            "pos_x": 287.0,
+            "pos_y": 367.5,
+            "inputs": [
+                {
+                    "id": 73339328,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 73339352,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//*[@id=\"product_description\"]/following-sibling::p/text()"
+            },
+            "op_code": 7
+        }
+    ],
+    "edges": [
+        {
+            "id": 73191304,
+            "edge_type": 2,
+            "start": 73188640,
+            "end": 73189408
+        },
+        {
+            "id": 73339232,
+            "edge_type": 2,
+            "start": 73189432,
+            "end": 73189552
+        },
+        {
+            "id": 73339400,
+            "edge_type": 2,
+            "start": 73189576,
+            "end": 73188760
+        },
+        {
+            "id": 73340168,
+            "edge_type": 2,
+            "start": 73189576,
+            "end": 73339808
+        },
+        {
+            "id": 73340696,
+            "edge_type": 2,
+            "start": 73189576,
+            "end": 73340192
+        },
+        {
+            "id": 73340648,
+            "edge_type": 2,
+            "start": 73189576,
+            "end": 73339328
+        },
+        {
+            "id": 73340816,
+            "edge_type": 2,
+            "start": 73188784,
+            "end": 73189696
+        },
+        {
+            "id": 73341032,
+            "edge_type": 2,
+            "start": 73339832,
+            "end": 73189696
+        },
+        {
+            "id": 73341080,
+            "edge_type": 2,
+            "start": 73339928,
+            "end": 73189696
+        },
+        {
+            "id": 73341272,
+            "edge_type": 2,
+            "start": 73339352,
+            "end": 73189696
+        }
+    ]
+}
