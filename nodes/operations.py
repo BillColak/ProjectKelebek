@@ -4,12 +4,16 @@ from kelebek_conf import *
 from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 
-# import requests
-from requests import Session
 from spider.kelebek_node_functions import get_item, multi_link, paginator
+from kelebek_multithreading import run_threaded_process
+
+import time
+from colorama import Fore
 
 import asyncio
-from colorama import Fore
+# import requests
+from requests import Session
+
 DEBUG = True
 
 # page_url = 'http://books.toscrape.com/'
@@ -237,7 +241,6 @@ class KelebekNodeDisplayOutput(KelebekNode):
 
 @register_node(OP_NODE_TEST)
 class KelebekTestNode(KelebekNode):
-    # icon = "icons/mul.png"
     op_code = OP_NODE_TEST
     op_title = "Test Node"
     content_label = ""
@@ -250,10 +253,37 @@ class KelebekTestNode(KelebekNode):
         self.input_multi_edged = True
         self.output_multi_edged = True
 
+    def update_progress(self, val):
+        self.content.prg.setValue(val)
+
+    def completed(self):
+        print('COMPLETED')
+
+    def print_output(self, s):
+        print('OUTPUT: ', s)
+        return s
+
+    def execute_this_fn(self, val, progress_callback):
+        for x in range(20, 101, 20):
+            print(x)
+            time.sleep(0.5)
+            progress_callback.emit(x)
+            self.value_output.append(x)
+        return self.value_output
+
     def evalOperation(self, value1, *args):
-        print(Fore.LIGHTCYAN_EX, 'TEST NODE: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
-        print('ARGS: ', [i for i in args])
-        return 'TEST NODE: value1: '+value1+'ARGS: '+str(args)
+
+        run_threaded_process(
+            cb_func=self.execute_this_fn,
+            progress_fn=self.update_progress,
+            on_complete=self.completed,
+            return_output=self.print_output,
+        )
+
+        return '123'
+        # print(Fore.LIGHTCYAN_EX, 'TEST NODE: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
+        # print('ARGS: ', [i for i in args])
+        # return 'TEST NODE: value1: '+value1+'ARGS: '+str(args)
 
     def evalImplementation(self):
         all_inputs_nodes = self.getInputs()
@@ -281,6 +311,109 @@ class KelebekTestNode(KelebekNode):
             self.evalChildren()
 
             return val
+
+
+@register_node(OP_NODE_TEST_2)
+class KelebekTestNode2(KelebekNode):
+    op_code = OP_NODE_TEST_2
+    op_title = "Test Node2"
+    content_label = ""
+    content_label_objname = "Kelebek_node_test2"
+
+    def initSettings(self):
+        super().initSettings()
+        self.input_socket_position = LEFT_CENTER
+        self.output_socket_position = RIGHT_CENTER
+        self.input_multi_edged = True
+        self.output_multi_edged = True
+
+    def evalOperation(self, value1, *args):
+        print(Fore.LIGHTCYAN_EX, 'TEST NODE2: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
+        print('ARGS: ', [i for i in args])
+        return 'TEST NODE2: value1: '+value1+'ARGS: '+str(args)
+
+    def evalImplementation(self):
+        all_inputs_nodes = self.getInputs()
+        v1 = self.content.edit.text()
+
+        print(Fore.BLUE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
+
+        if not all_inputs_nodes:
+            self.markInvalid()
+            self.markDescendantsDirty()
+            self.grNode.setToolTip("Connect all inputs")
+            return None
+
+        else:
+            val = self.evalOperation(v1, *(node.eval() for node in all_inputs_nodes))
+
+            self.value = val
+            self.markDirty(False)
+            self.markInvalid(False)
+            self.grNode.setToolTip("")
+
+            self.markDescendantsDirty()
+            self.evalChildren()
+
+            return val
+
+
+@register_node(OP_NODE_TEST_3)
+class KelebekTestNode3(KelebekNode):
+    op_code = OP_NODE_TEST_3
+    op_title = "Test Node3"
+    content_label = ""
+    content_label_objname = "Kelebek_node_test3"
+
+    def initSettings(self):
+        super().initSettings()
+        self.input_socket_position = LEFT_CENTER
+        self.output_socket_position = RIGHT_CENTER
+        self.input_multi_edged = True
+        self.output_multi_edged = True
+
+    def evalOperation(self, value1, *args):
+        print(Fore.LIGHTCYAN_EX, 'TEST NODE3: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
+        print('ARGS: ', [i for i in args])
+        return 'TEST NODE3: value1: ' + value1 + 'ARGS: ' + str(args)
+
+    def evalImplementation(self):
+        all_inputs_nodes = self.getInputs()
+        v1 = self.content.edit.text()
+
+        print(Fore.BLUE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
+
+        if not all_inputs_nodes:
+            self.markInvalid()
+            self.markDescendantsDirty()
+            self.grNode.setToolTip("Connect all inputs")
+            return None
+
+        else:
+            val = self.evalOperation(v1, *(node.eval() for node in all_inputs_nodes))
+
+            self.value = val
+            self.markDirty(False)
+            self.markInvalid(False)
+            self.grNode.setToolTip("")
+
+            self.markDescendantsDirty()
+            self.evalChildren()
+
+            return val
+
+
+class KelebekTestNodeContent(KelebekContent):
+    def initUI(self):
+        self.contentlayout = QFormLayout(self)
+        self.edit = QLineEdit("Enter XPath: ", self)
+        self.edit.setAlignment(Qt.AlignLeft)
+        self.contentlayout.addRow('XPath', self.edit)
+
+        self.prg = QProgressBar()
+        self.prg.setStyle(QStyleFactory.create("windows"))
+        self.prg.setTextVisible(True)
+        self.contentlayout.addRow(self.prg)
 
 
 class KelebekOutputDisplayContent(QDMNodeContentWidget):

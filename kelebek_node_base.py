@@ -48,8 +48,8 @@ class KelebekContent(QDMNodeContentWidget):
         self.edit = QLineEdit("Enter XPath", self)
         self.edit.setAlignment(Qt.AlignLeft)
         self.contentlayout.addRow('XPath', self.edit)
-        self.progressbar = QProgressBar()
-        self.progressbar.setRange(0, 1)
+        # self.progressbar = QProgressBar()
+        # self.progressbar.setRange(0, 1)
         # self.spinner = QtWaitingSpinner(self)
 
     # def submit(self):
@@ -94,6 +94,9 @@ class KelebekNode(Node):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
 
         self.value = None
+        self.value_output = []  # if the thread appends  to this. is it trying to access the widget?
+        # The only way to learn this is by trying.
+        # You are swimming in murky waters. Where sense of sight is useless. hence you have to adapt.
 
         # it's really important to mark all nodes Dirty by default
         self.markDirty()
@@ -113,7 +116,9 @@ class KelebekNode(Node):
     def evalOperation(self, input1, input2):
         """ Node operations happen here, and given the output it gets evaluated and marked
         for all descending nodes."""
-
+        # set some value ex: self.value_output = [],
+        # .connect(self.eval) on signals.progress or results
+        # return self.value_output
         return 123
 
     def evalImplementation(self):
@@ -139,6 +144,7 @@ class KelebekNode(Node):
             return val
 
     def eval(self):
+        # may also use eval children? which does not eval current node.children= one level below not all children
         if not self.isDirty() and not self.isInvalid():
             if DEBUG:
                 print(Fore.MAGENTA, " _> returning cached %s value:" % self.__class__.__name__, self.value, flush=True)
@@ -154,6 +160,7 @@ class KelebekNode(Node):
             self.markDescendantsDirty()
         except Exception as e:
             self.markInvalid()
+            # self.markDescendantsInvalid() may want to also use this
             self.grNode.setToolTip(str(e))
             dumpException(e)
 
@@ -163,6 +170,11 @@ class KelebekNode(Node):
         self.markDirty()
         self.eval()
 
+    # def onMarkedDirty(self):
+    #     pass
+    #
+    # def onMarkedInvalid(self):
+    #     pass
 
     def serialize(self):
         res = super().serialize()

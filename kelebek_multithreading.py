@@ -8,6 +8,8 @@ import sys
 import random
 import time
 from functools import partial
+from colorama import Fore
+from collections import deque
 
 # https://forum.learnpyqt.com/t/pause-a-running-worker-thread/147/4
 
@@ -18,10 +20,38 @@ from functools import partial
 # mechanism during the task execution. Use: QtConcurrent and QThreadPool + QRunnable.
 # QtConcurrent == new bae on the block?
 
+DEFAULT_STYLE = """
+QProgressBar{
+    border: 2px solid grey;
+    border-radius: 5px;
+    text-align: center
+}
 
-def run_threaded_process(threadpool: QThreadPool, cb_func=None, progress_fn=None, on_complete=None, return_output=None, *args, **kwargs):
+QProgressBar::chunk {
+    background-color: lightblue;
+    width: 10px;
+    margin: 1px;
+}
+"""
+
+COMPLETED_STYLE = """
+QProgressBar{
+    border: 2px solid grey;
+    border-radius: 5px;
+    text-align: center
+}
+
+QProgressBar::chunk {
+    background-color: green;
+    width: 10px;
+    margin: 1px;
+}
+"""
+
+
+
+def run_threaded_process(cb_func=None, progress_fn=None, on_complete=None, return_output=None, *args, **kwargs):
     """
-    :parameter threadpool: The threadpool object you hopefully instantiated in the class.
     :parameter cb_func: the (callback) function you want to run, which must include a 'process_callback' parameter.
     Which is a signal that gets emitted back.
     :parameter progress_fn: is what you receive incrementally each time, the func sound have a param.
@@ -36,7 +66,8 @@ def run_threaded_process(threadpool: QThreadPool, cb_func=None, progress_fn=None
         worker.signals.result.connect(return_output)  # all signals other than finished return values.
     if return_output:
         worker.signals.finished.connect(on_complete)
-    threadpool.start(worker)
+    # threadpool.start(worker)
+    QThreadPool.globalInstance().start(worker)
 
 
 class WorkerSignals(QObject):
@@ -83,10 +114,11 @@ class Worker(QRunnable):
         self.callback = callback
         self.args = args
         self.kwargs = kwargs
+
         self.signals = WorkerSignals()
 
         # Add the callback to our kwargs
-        kwargs['progress_callback'] = self.signals.progress
+        self.kwargs['progress_callback'] = self.signals.progress  # added self to kwargs for understanding
         # There is actually nothing in args and kwargs other than progress_callback.wtf is the point of args.
         # especially when they are immutable.
 
@@ -110,8 +142,10 @@ class Worker(QRunnable):
 
 
 class Dialog(QDialog):
+
     def __init__(self, *args, **kwargs):
         QDialog.__init__(self, *args, **kwargs)
+
         # what is the difference this and super(Dialog, self).__init__(self, *args, **kwargs)
 
         self.setGeometry(QRect(200, 200, 500, 500))
@@ -119,8 +153,9 @@ class Dialog(QDialog):
         # Makes Qt delete this widget when the widget has accepted the close event (see QWidget::closeEvent()).
         # Do not call int QDialog::result() const if you use this? This shit might lead to silent memory leaks
 
-        self.threadpool = QThreadPool()
-        self.worker = partial(Worker, )
+        # self.threadpool = QThreadPool()
+        # self.worker = partial(Worker, )
+        self.dq = deque()
 
         layout = QVBoxLayout(self)
         self.setLayout(layout)
@@ -128,8 +163,16 @@ class Dialog(QDialog):
         self.startbutton = QPushButton('Start', clicked=self.run)  # another way for connecting
         self.stopbutton = QPushButton('Stop')
 
-        self.progressbar = QProgressBar()  # seems to work fine without self
-        self.progressbar.setRange(0, 1)
+        self.progressbar = QProgressBar()
+        # self.progressbar.setStyle(QStyleFactory.create("windows"))
+        self.progressbar.setStyleSheet(DEFAULT_STYLE)
+        self.progressbar.setTextVisible(False)
+
+        self.progressbar2 = QProgressBar()
+        self.progressbar2.setStyleSheet(COMPLETED_STYLE)
+        self.progressbar2.setTextVisible(False)
+
+        # self.progressbar.setRange(0, 1)
 
         self.textedit = QTextEdit()
         self.textedit.append('Some Info Here')
@@ -137,12 +180,13 @@ class Dialog(QDialog):
         layout.addWidget(self.startbutton)
         layout.addWidget(self.stopbutton)
         layout.addWidget(self.progressbar)
+        layout.addWidget(self.progressbar2)
         layout.addWidget(self.textedit)
 
         # self.startbutton.clicked.connect(self.run)
         self.stopbutton.clicked.connect(self.stop)
 
-    def run_threaded_process(self, threadpool: QThreadPool, cb_func, progress_fn=None, on_complete=None, return_output=None):
+    def run_threaded_process(self, cb_func, progress_fn=None, on_complete=None, return_output=None):
         """
         threadpool: The threadpool object you hopefully instantiated in the class.
         cb_func: the (callback) function you want to run.
@@ -156,71 +200,85 @@ class Dialog(QDialog):
         if progress_fn: worker.signals.progress.connect(progress_fn)
         if on_complete: worker.signals.result.connect(return_output)  # all signals other than finished return values.
         if return_output: worker.signals.finished.connect(on_complete)
-        threadpool.start(worker)
+        QThreadPool.globalInstance().start(worker)
 
     def run(self):
         """call process"""
         self.stopped = False
 
         run_threaded_process(
-            threadpool=self.threadpool,
             cb_func=self.execute_this_fn,
             progress_fn=self.progression_function,
             on_complete=self.completed,
             return_output=self.print_output,
-            page='http://books.toscrape.com/',
+            # page='http://books.toscrape.com/'
         )
-        # run_threaded_process(
-        #     self.threadpool,
-        #     self.execute_this_fn,
-        #     self.progression_function,
-        #     self.completed,
-        #     self.print_output,
-        #     'http://books.toscrape.com/',
-        # )
-        self.progressbar.setRange(0, 0)
+        self.second_progbar()
+        # self.progressbar.setRange(0, 0)
 
     def stop(self):
         self.stopped = True
         return
 
     def completed(self):
-        self.progressbar.setRange(0, 1)
+        print('COMPLETED')
+        # self.progressbar.setRange(0, 1)
         return
 
     def progression_function(self, msg):
+        self.progressbar.setValue(msg)
         self.textedit.append(str(msg))
+        self.dq.append(msg)
         return
 
     def print_output(self, s):
         print('OUTPUT: ', s)
         return s
 
-    def execute_this_fn(self, page, progress_callback):
-        # is called. Which means self.progress_fn = progress_callback
-        """Do some process here"""
-        resp = requests.get(page)
-        # 'http://books.toscrape.com/'
-        total = 50
-        for i in range(0, total):
-            time.sleep(.2)
-            x = random.randint(1, 1000)
-            progress_callback.emit(x)
-            if self.stopped:
-                return
-        return resp.content
+    def callmemaybe(self, pc):
+        for x in range(20, 101, 10):
+            time.sleep(0.5)
+            pc.emit(x)
+
+    def execute_this_fn(self, progress_callback):
+        self.callmemaybe(progress_callback)
+
+    def second_progbar(self):
+        while True:
+            if deque:
+                x = self.dq.popleft()
+                print(x)
+        # self.progressbar2.setValue()
+
+            # self.value_output.append(x)
+        # return self.value_output
+
+    # def execute_this_fn(self, page, progress_callback):
+    #     # is called. Which means self.progress_fn = progress_callback
+    #     """Do some process here"""
+    #     resp = requests.get(page)
+    #     # 'http://books.toscrape.com/'
+    #     total = 50
+    #     for i in range(0, total):
+    #         time.sleep(.2)
+    #         x = random.randint(1, 1000)
+    #         progress_callback.emit(x)
+    #         if self.stopped:
+    #             return
+    #     return resp.content
         # return 'The function has finished executing'  # or emit the completed.
 
 
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+    dial = Dialog()
+    dial.show()
+    sys.exit(app.exec_())
+
     # app.aboutToQuit.connect(worker.stop) Stopping the thread when app is closed also,
     # If you have many workers, you might prefer to connect this to a handler that will clean
     # up all the workers in one go. If you have per-window workers, you could also catch the
     # window closeEvent and stop the workers there. https://forum.learnpyqt.com/t/pause-a-running-worker-thread/147/4
     # there are also more to this.
 
-    dial = Dialog()
-    dial.show()
-    sys.exit(app.exec_())
