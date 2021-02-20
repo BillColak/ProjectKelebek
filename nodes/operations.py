@@ -5,7 +5,7 @@ from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 
 from spider.kelebek_node_functions import get_item, multi_link, paginator
-from kelebek_multithreading import run_threaded_process
+from kelebek_multithreading import run_threaded_process, DEFAULT_STYLE, COMPLETED_STYLE
 
 import time
 from colorama import Fore
@@ -102,9 +102,10 @@ class KelebekNodePagination(KelebekNode):
     def evalOperation(self, input1_page, value1_pagination_path: str):
         print(Fore.RED, 'INPUT PAGE:', input1_page, flush=True)
         with Session() as client:
-            for response in paginator(client, input1_page, value1_pagination_path):
-                print(Fore.RED, f'Page-: ', response, flush=True)
-                yield response
+            yield paginator(client, input1_page, value1_pagination_path)
+            # for response in paginator(client, input1_page, value1_pagination_path):
+            #     print(Fore.RED, f'Page-: ', response, flush=True)
+            #     yield response
         # client.close()
 
     # def fetch(self, session: Session, url: str, path: str) -> requests.Response:

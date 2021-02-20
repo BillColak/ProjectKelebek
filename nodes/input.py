@@ -8,7 +8,7 @@ import time
 # import requests
 from colorama import Fore
 # from collections import deque
-from kelebek_multithreading import run_threaded_process
+from kelebek_multithreading import run_threaded_process, DEFAULT_STYLE, COMPLETED_STYLE
 
 
 @register_node(OP_NODE_INPUT)
@@ -40,7 +40,7 @@ class KelebekNodeInput(KelebekNode):
         # self.run_threaded_process, self.threadpool, self.get_page, self.etc))
 
     def update_progress(self, val):
-        self.content.prg.setValue(val)
+        self.content.progressbar.setValue(val)
 
     def completed(self):
         print('COMPLETED')
@@ -93,7 +93,7 @@ class KelebekInputContent(KelebekContent):
         self.edit = QLineEdit("Enter Information: ", self)
         self.edit.setAlignment(Qt.AlignLeft)
         self.contentlayout.addRow('URL', self.edit)
-        self.prg = QProgressBar()
-        self.prg.setStyle(QStyleFactory.create("windows"))
-        self.prg.setTextVisible(True)
-        self.contentlayout.addRow(self.prg)
+        self.progressbar = QProgressBar()
+        self.progressbar.setStyleSheet(COMPLETED_STYLE)
+        self.progressbar.setTextVisible(False)
+        self.contentlayout.addRow(self.progressbar)

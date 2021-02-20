@@ -42,12 +42,11 @@ QProgressBar{
 }
 
 QProgressBar::chunk {
-    background-color: green;
+    background-color: lightgreen;
     width: 10px;
     margin: 1px;
 }
 """
-
 
 
 def run_threaded_process(cb_func=None, progress_fn=None, on_complete=None, return_output=None, *args, **kwargs):
@@ -186,34 +185,18 @@ class Dialog(QDialog):
         # self.startbutton.clicked.connect(self.run)
         self.stopbutton.clicked.connect(self.stop)
 
-    def run_threaded_process(self, cb_func, progress_fn=None, on_complete=None, return_output=None):
-        """
-        threadpool: The threadpool object you hopefully instantiated in the class.
-        cb_func: the (callback) function you want to run.
-        progress_fn: is what you receive incrementally each time, the func sound have a param.
-        on_complete: when completed exec this func without any params.
-        return_output: the shit you want to return when your callback function finishes running.
-        """
-        # so the last two params just return optional info?
-
-        worker = Worker(cb_func, 'http://books.toscrape.com/')  # Any other args, kwargs are passed to the run function
-        if progress_fn: worker.signals.progress.connect(progress_fn)
-        if on_complete: worker.signals.result.connect(return_output)  # all signals other than finished return values.
-        if return_output: worker.signals.finished.connect(on_complete)
-        QThreadPool.globalInstance().start(worker)
-
     def run(self):
         """call process"""
         self.stopped = False
 
         run_threaded_process(
-            cb_func=self.execute_this_fn,
+            cb_func=self.update_progbar1,
             progress_fn=self.progression_function,
             on_complete=self.completed,
             return_output=self.print_output,
             # page='http://books.toscrape.com/'
         )
-        self.second_progbar()
+        # self.second_progbar()
         # self.progressbar.setRange(0, 0)
 
     def stop(self):
@@ -227,7 +210,7 @@ class Dialog(QDialog):
 
     def progression_function(self, msg):
         self.progressbar.setValue(msg)
-        self.textedit.append(str(msg))
+        self.textedit.append('Prog1 - '+str(msg))
         self.dq.append(msg)
         return
 
@@ -235,19 +218,22 @@ class Dialog(QDialog):
         print('OUTPUT: ', s)
         return s
 
-    def callmemaybe(self, pc):
+    # def callmemaybe(self, pc):
+    #     for x in range(20, 101, 10):
+    #         time.sleep(0.5)
+    #         pc.emit(x)
+
+    # this is a slot, can it also be a signal
+    def update_progbar1(self, progress_callback):
         for x in range(20, 101, 10):
             time.sleep(0.5)
-            pc.emit(x)
+            progress_callback.emit(x)
 
-    def execute_this_fn(self, progress_callback):
-        self.callmemaybe(progress_callback)
+    def update_progbar2(self, progress_callback2):
+        for x in range(20, 101, 10):
+            time.sleep(0.5)
+            progress_callback2.emit(x)
 
-    def second_progbar(self):
-        while True:
-            if deque:
-                x = self.dq.popleft()
-                print(x)
         # self.progressbar2.setValue()
 
             # self.value_output.append(x)
