@@ -18,3 +18,4 @@ if __name__ == '__main__':
 
     sys.exit(app.exec_())
 
+# TODO Software Architecture will be: nodes connecting operations through generators and exec at the end.

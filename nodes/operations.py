@@ -4,17 +4,21 @@ from kelebek_conf import *
 from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 
-from spider.kelebek_node_functions import get_item, multi_link, paginator
+from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, broadcast, coroutine
 from kelebek_multithreading import run_threaded_process, DEFAULT_STYLE, COMPLETED_STYLE
 
-import time
+# import requests
+# import time
+import os
 from colorama import Fore
 
 import asyncio
-# import requests
 from requests import Session
 
 DEBUG = True
+
+# TODO Coding Standards, all returned/(yielded) items must be generators.
+# The yielded generators should all be lists unless other wise stated?
 
 # page_url = 'http://books.toscrape.com/'
 # pagination_path = '//a[text()="next"]/@href'
@@ -23,67 +27,17 @@ DEBUG = True
 price_path = '//div[1]/div[2]/p[normalize-space(@class)="price_color"]/text()'
 title_path = '//h1/text()'
 
-# TODO all nodes with async which will made the app really clunky before multithreading so don't be disheartened.
 
+@register_node(OP_NODE_HOP_LINK)
+class KelebekNodeHopLink(KelebekNode):
+    # icon = "icons/sub.png"
+    op_code = OP_NODE_HOP_LINK
+    op_title = "Hop Link"
+    content_label = ""
+    content_label_objname = "Kelebek_node_hop_link"
 
-# def xpath_root(page_source: str or bytes, base_url=None, parser=None) -> lxml_html.HtmlElement:
-#     return lxml_html.fromstring(html=page_source, base_url=base_url, parser=parser)
-#
-#
-# def get_first(list_elements):
-#     try:
-#         return list_elements.pop(0)
-#     except:
-#         return ''
-#
-#
-# def get_item(resp, path):
-#     return get_first(xpath_root(resp).xpath(path))
-#
-#
-# def single_item(attributes: dict or None, path: str) -> str:
-#     xpath_ = get_string_item(path)
-#     if attributes:
-#         attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
-#                         key != 'style']
-#         if len(attrib_xpath) > 0:
-#             return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/text()'
-#         else:
-#             return f'//{xpath_}' + '/text()'
-#     else:
-#         return f'//{xpath_}' + '/text()'
-#
-#
-# def get_string_item(value) -> str:
-#     path = str(value).split('/')
-#     if [i for i in ['table', 'tbody', 'tr', 'td'] if i in path]:
-#         return "/".join(path[-3:])
-#     else:
-#         return "/".join(path[-3:-1]) + '/' + path[-1].split('[')[0]
-#
-#
-# async def multi_link(loop: AbstractEventLoop, gen, path: str):
-#     tasks = []
-#     async with ClientSession(loop=loop) as session:
-#         for i, j in enumerate(gen):
-#             print(Fore.MAGENTA, f'Page-{i + 1}: ', j.url, flush=True)
-#             urls = [urljoin(j.url, link) for link in xpath_root(j.content).xpath(path)]
-#             for url in urls:
-#                 tasks.append(loop.create_task(fetch(session, url)))
-#
-#         return await asyncio.gather(*tasks)
-#
-#         # for task in asyncio.as_completed(tasks):
-#         #     earliest_result = await task
-#         #     yield earliest_result
-#
-#
-# async def fetch(session: ClientSession, url):
-#     print(Fore.CYAN + f"FETCHING PAGES: {url}", flush=True)
-#     async with session.get(url) as response:
-#         response.raise_for_status()
-#         html_body = await response.text()
-#         return html_body
+    def evalOperation(self, input1, value1):
+        print("NOT IMPLEMENTED")
 
 
 @register_node(OP_NODE_PAGINATION)
@@ -97,40 +51,27 @@ class KelebekNodePagination(KelebekNode):
     def __init__(self, scene):
         super().__init__(scene, inputs=[2], outputs=[1])
 
-# TODO might need slot()s to catch this shit https://stackoverflow.com/questions/61842432/pyqt5-and-asyncio eventloop
-
-    def evalOperation(self, input1_page, value1_pagination_path: str):
-        print(Fore.RED, 'INPUT PAGE:', input1_page, flush=True)
+    def pagination(self, input1_page, value1_pagination_path: str):
+        print(Fore.CYAN, 'INPUT PAGE:', input1_page, flush=True)
         with Session() as client:
-            yield paginator(client, input1_page, value1_pagination_path)
-            # for response in paginator(client, input1_page, value1_pagination_path):
-            #     print(Fore.RED, f'Page-: ', response, flush=True)
-            #     yield response
-        # client.close()
+            for response in paginator(client, input1_page, value1_pagination_path):
+                yield response
+        client.close()
 
-    # def fetch(self, session: Session, url: str, path: str) -> requests.Response:
-    #     resp = session.get(url)
-    #     link = get_item(resp.content, path)
-    #     yield resp
-    #     if len(link) > 0:
-    #         absolute_url = urljoin(url, link)
-    #         yield from self.fetch(session, absolute_url, path)
-
-
-@register_node(OP_NODE_HOP_LINK)
-class KelebekNodeHopLink(KelebekNode):
-    # icon = "icons/sub.png"
-    op_code = OP_NODE_HOP_LINK
-    op_title = "Hop Link"
-    content_label = ""
-    content_label_objname = "Kelebek_node_hop_link"
-
-    def evalOperation(self, input1, value1):
-        print(Fore.GREEN, 'HOP LINK: ', 'input1:', input1, 'value1:', value1, flush=True)
-        if input1:
-            return 'Hop Link: '+'input1:'+input1+'value1:'+value1
-        else:
-            return 'Hop Link: no input1: '+value1
+    # @coroutine
+    def evalOperation(self, input1_page, value1_pagination_path: str):
+        # output_nodes = self.getOutputs()
+        # broadcaster = broadcast(output_nodes)
+        # while True:
+        #     data = yield  # when this is where you make a connection to this node.
+        #     output = self.pagination(data, value1)  # it no
+        #     broadcaster.send(output)
+        output_nodes = self.getOutputs()
+        print(Fore.CYAN, 'INPUT PAGE:', input1_page, flush=True)
+        with Session() as client:
+            for response in paginator(client, input1_page, value1_pagination_path):
+                yield response
+        client.close()
 
 
 @register_node(OP_NODE_HOP_ALL_LINKS)
@@ -145,10 +86,6 @@ class KelebekNodeHopAllLinks(KelebekNode):
         loop = asyncio.get_event_loop()
         x = loop.run_until_complete(multi_link(loop, gen, path))
         return x
-        # for i in x:
-        #     price = get_item(i, price_path)
-        #     title = get_item(i, title_path)
-        #     print(Fore.WHITE + f"BOOKS PRICE: {price} {title}", flush=True)
 
 
 @register_node(OP_NODE_SINGLE_ITEM)
@@ -159,18 +96,23 @@ class KelebekNodeSingleItem(KelebekNode):
     content_label = ""
     content_label_objname = "Kelebek_node_single_item"
 
+    # @coroutine
     def evalOperation(self, input1, value1):
-        # print('INPUT1: ', next(input1))
         items = []
         for i in input1:
-            item = get_item(i.content, value1)
+            item = get_item(i, value1)
             print(Fore.BLUE, 'ITEM: ', item)
             items.append(item)
         return items
-        # items = [get_item(i.content, value1) for i in input1]
-        #
-        # print(Fore.BLUE, [get_item(i.content, value1) for i in input1])
-        # return items  # could also use yield but is that useful for items?
+
+        # output_nodes = self.getOutputs()
+        # broadcaster = broadcast(output_nodes)
+        # while True:
+        #     data = yield
+
+        # for i in input1:
+        #     print(type(i))
+        #     yield from get_item(i, value1)
 
 
 @register_node(OP_NODE_MULTI_ITEM)
@@ -182,11 +124,20 @@ class KelebekNodeMultiItem(KelebekNode):
     content_label_objname = "Kelebek_node_multi_item"
 
     def evalOperation(self, input1, value1):
-        print(Fore.GREEN, 'ALL ITEMS : ', 'input1:', input1, 'value1:', value1, flush=True)
-        if input1:
-            return 'ALL ITEMS: '+'input1:'+input1+'value1:'+value1
-        else:
-            return 'ALL ITEMS: no input1: '+value1
+        # This for iterating through TEST NODE one by one
+        # for i in input1:
+        #     items = get_all(i, value1)
+        #     yield items
+
+        output=[]
+        for i in input1:
+            print(type(i))
+            output.append(get_all(i, value1))
+        return output
+
+        # for i in input1:
+        #     print(type(i))
+        #     yield from get_all(i, value1)
 
 
 @register_node(OP_NODE_DISPLAY_OUTPUT)
@@ -247,79 +198,8 @@ class KelebekTestNode(KelebekNode):
     content_label = ""
     content_label_objname = "Kelebek_node_test"
 
-    def initSettings(self):
-        super().initSettings()
-        self.input_socket_position = LEFT_CENTER
-        self.output_socket_position = RIGHT_CENTER
-        self.input_multi_edged = True
-        self.output_multi_edged = True
-
-    def update_progress(self, val):
-        self.content.prg.setValue(val)
-
-    def completed(self):
-        print('COMPLETED')
-
-    def print_output(self, s):
-        print('OUTPUT: ', s)
-        return s
-
-    def execute_this_fn(self, val, progress_callback):
-        for x in range(20, 101, 20):
-            print(x)
-            time.sleep(0.5)
-            progress_callback.emit(x)
-            self.value_output.append(x)
-        return self.value_output
-
-    def evalOperation(self, value1, *args):
-
-        run_threaded_process(
-            cb_func=self.execute_this_fn,
-            progress_fn=self.update_progress,
-            on_complete=self.completed,
-            return_output=self.print_output,
-        )
-
-        return '123'
-        # print(Fore.LIGHTCYAN_EX, 'TEST NODE: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
-        # print('ARGS: ', [i for i in args])
-        # return 'TEST NODE: value1: '+value1+'ARGS: '+str(args)
-
-    def evalImplementation(self):
-        all_inputs_nodes = self.getInputs()
-        v1 = self.content.edit.text()
-
-        print(Fore.BLUE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
-        # print(Fore.LIGHTGREEN_EX, 'ONE INPUT NODE: ', i1, type(i1), flush=True)
-
-        if not all_inputs_nodes:
-            self.markInvalid()
-            self.markDescendantsDirty()
-            self.grNode.setToolTip("Connect all inputs")
-            return None
-
-        else:
-            # val = self.evalOperation(i1.eval(), v1)
-            val = self.evalOperation(v1, *(node.eval() for node in all_inputs_nodes))  # so this is a gen expression
-
-            self.value = val
-            self.markDirty(False)
-            self.markInvalid(False)
-            self.grNode.setToolTip("")
-
-            self.markDescendantsDirty()
-            self.evalChildren()
-
-            return val
-
-
-@register_node(OP_NODE_TEST_2)
-class KelebekTestNode2(KelebekNode):
-    op_code = OP_NODE_TEST_2
-    op_title = "Test Node2"
-    content_label = ""
-    content_label_objname = "Kelebek_node_test2"
+    def __init__(self, scene):
+        super().__init__(scene, inputs=[1], outputs=[])
 
     def initSettings(self):
         super().initSettings()
@@ -328,93 +208,79 @@ class KelebekTestNode2(KelebekNode):
         self.input_multi_edged = True
         self.output_multi_edged = True
 
-    def evalOperation(self, value1, *args):
-        print(Fore.LIGHTCYAN_EX, 'TEST NODE2: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
-        print('ARGS: ', [i for i in args])
-        return 'TEST NODE2: value1: '+value1+'ARGS: '+str(args)
+    def initInnerClasses(self):
+        self.content = KelebekTestNodeContent(self)
+        self.grNode = KelebekGraphicsNode(self)
+        self.content.run_nodes.clicked.connect(self.clk_btn)
+
+    def flatten(self, curr_item, output):
+        import types
+
+        if isinstance(curr_item, types.GeneratorType):
+            for item in curr_item:
+                self.flatten(item, output)
+        else:
+            output.append(curr_item)
+
+    def clk_btn(self):
+        all_inputs_nodes = self.getInputs()
+        val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
+        # tODO find a different function to run or make another todo make tool tips for listbox items, don't know wtf
+        #  any of these nodes do. (include if it allows for 1> connections)
+        #  if allows for 1> args upload to list?,
+        #  cyclic iterator is infinite, put time on it.
+        #  if it allows for multiple outputs which is every fucking node, use itertools.cycle.
+        #  Or find out how many outputs a node has and make copies of the generators.
+        #  Or make a delegators that acts as a transistors where it will call the node when requested but turns the
+        #  generators to a list. allowing for multiple iterations
+        # TODO yield the same thing n (output connection) amout of times.
+
+
+        # TODO Plan B make changes to EvalImplementaion so that it has three parts: receive, calculation, send. where
+        #  marked dirty if not EvalOperation, Also DONT FUCKING PUT ANYTHING IN EVALOP OTHER THAN THE OPERATION.
+        self.value = val
+
+    def evalOperation(self, *args):
+        print(Fore.BLUE, 'ARGS: ', args)
+        # item_list = []
+        # for i in args:
+        #     resp = next(i)
+        #     print(resp)
+            # self.flatten(i, item_list)
+        #
+        # for i, j in enumerate(item_list):
+        #     print(f"Item-{i+1}: ", j)
+        # print('Flatten length', len(item_list))
+        # return item_list
 
     def evalImplementation(self):
         all_inputs_nodes = self.getInputs()
-        v1 = self.content.edit.text()
-
-        print(Fore.BLUE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
+        print(Fore.WHITE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
 
         if not all_inputs_nodes:
+            self.grNode.setToolTip("Input is not connected")
             self.markInvalid()
-            self.markDescendantsDirty()
-            self.grNode.setToolTip("Connect all inputs")
-            return None
+            return
 
-        else:
-            val = self.evalOperation(v1, *(node.eval() for node in all_inputs_nodes))
+        # val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
 
-            self.value = val
-            self.markDirty(False)
-            self.markInvalid(False)
-            self.grNode.setToolTip("")
-
-            self.markDescendantsDirty()
-            self.evalChildren()
-
-            return val
-
-
-@register_node(OP_NODE_TEST_3)
-class KelebekTestNode3(KelebekNode):
-    op_code = OP_NODE_TEST_3
-    op_title = "Test Node3"
-    content_label = ""
-    content_label_objname = "Kelebek_node_test3"
-
-    def initSettings(self):
-        super().initSettings()
-        self.input_socket_position = LEFT_CENTER
-        self.output_socket_position = RIGHT_CENTER
-        self.input_multi_edged = True
-        self.output_multi_edged = True
-
-    def evalOperation(self, value1, *args):
-        print(Fore.LIGHTCYAN_EX, 'TEST NODE3: ', 'VALUE1:', value1, 'ARGS: ', args, flush=True)
-        print('ARGS: ', [i for i in args])
-        return 'TEST NODE3: value1: ' + value1 + 'ARGS: ' + str(args)
-
-    def evalImplementation(self):
-        all_inputs_nodes = self.getInputs()
-        v1 = self.content.edit.text()
-
-        print(Fore.BLUE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
-
-        if not all_inputs_nodes:
+        if self.value is None:
+            self.grNode.setToolTip("Input is NaN")
             self.markInvalid()
-            self.markDescendantsDirty()
-            self.grNode.setToolTip("Connect all inputs")
-            return None
+            return
 
-        else:
-            val = self.evalOperation(v1, *(node.eval() for node in all_inputs_nodes))
+        self.markInvalid(False)
+        self.markDirty(False)
+        self.grNode.setToolTip("")
 
-            self.value = val
-            self.markDirty(False)
-            self.markInvalid(False)
-            self.grNode.setToolTip("")
-
-            self.markDescendantsDirty()
-            self.evalChildren()
-
-            return val
+        return self.value
 
 
-class KelebekTestNodeContent(KelebekContent):
+class KelebekTestNodeContent(QDMNodeContentWidget):
     def initUI(self):
         self.contentlayout = QFormLayout(self)
-        self.edit = QLineEdit("Enter XPath: ", self)
-        self.edit.setAlignment(Qt.AlignLeft)
-        self.contentlayout.addRow('XPath', self.edit)
-
-        self.prg = QProgressBar()
-        self.prg.setStyle(QStyleFactory.create("windows"))
-        self.prg.setTextVisible(True)
-        self.contentlayout.addRow(self.prg)
+        self.run_nodes = QPushButton(QIcon(os.path.join('images', 'play-hot.png')), 'Run', self)
+        self.contentlayout.addWidget(self.run_nodes)
 
 
 class KelebekOutputDisplayContent(QDMNodeContentWidget):
@@ -435,7 +301,3 @@ class KelebekDisplayGraphicsNode(KelebekGraphicsNode):
         self.edge_padding = 0
         self.title_horizontal_padding = 8
         self.title_vertical_padding = 10
-
-
-# way how to register by function call
-# register_node_now(OP_NODE_ADD, CalcNode_Add)

@@ -66,7 +66,7 @@ class KelebekWindow(NodeEditorWindow):
 
         self.createActions()
         self.createMenus()
-        self.createToolBars()
+        self.createToolBars() # this doesnt do anything
         self.createStatusBar()
         self.updateMenus()
 
@@ -303,6 +303,7 @@ class KelebekWindow(NodeEditorWindow):
 
     def createStatusBar(self):
         self.statusBar().showMessage("Ready")
+        # self.statusBar().addPermanentWidget(self.progressBar)
 
     def createMdiChild(self, child_widget=None):
         nodeeditor = child_widget if child_widget is not None else KelebekSubWindow()

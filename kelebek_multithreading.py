@@ -62,9 +62,9 @@ def run_threaded_process(cb_func=None, progress_fn=None, on_complete=None, retur
     if progress_fn:
         worker.signals.progress.connect(progress_fn)
     if on_complete:
-        worker.signals.result.connect(return_output)  # all signals other than finished return values.
-    if return_output:
         worker.signals.finished.connect(on_complete)
+    if return_output:
+        worker.signals.result.connect(return_output)  # all signals other than finished return values.
     # threadpool.start(worker)
     QThreadPool.globalInstance().start(worker)
 
@@ -191,8 +191,8 @@ class Dialog(QDialog):
 
         run_threaded_process(
             cb_func=self.update_progbar1,
-            progress_fn=self.progression_function,
-            on_complete=self.completed,
+            # progress_fn=self.progression_function,
+            # on_complete=self.completed,
             return_output=self.print_output,
             # page='http://books.toscrape.com/'
         )
@@ -228,6 +228,7 @@ class Dialog(QDialog):
         for x in range(20, 101, 10):
             time.sleep(0.5)
             progress_callback.emit(x)
+        return 'returning whatever'
 
     def update_progbar2(self, progress_callback2):
         for x in range(20, 101, 10):

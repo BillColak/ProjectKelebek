@@ -9,7 +9,7 @@ from nodeeditor.utils import dumpException
 
 from colorama import Fore
 # from WaitingSpinnerWidget import QtWaitingSpinner
-# from kelebek_multithreading import Worker
+from kelebek_multithreading import run_threaded_process
 DEBUG = True
 
 
@@ -92,9 +92,8 @@ class KelebekNode(Node):
 
     def __init__(self, scene, inputs=[2], outputs=[1]):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
-
         self.value = None
-        self.value_output = []  # if the thread appends  to this. is it trying to access the widget?
+        # self.value_output = []  # if the thread appends  to this. is it trying to access the widget?
         # The only way to learn this is by trying.
         # You are swimming in murky waters. Where sense of sight is useless. hence you have to adapt.
 
@@ -113,6 +112,13 @@ class KelebekNode(Node):
         self.input_multi_edged = False
         self.output_multi_edged = True
 
+    # def receive(self):
+    #     data = yield
+    #     return data
+    #
+    # def deliver(self):
+    #     pass
+
     def evalOperation(self, input1, input2):
         """ Node operations happen here, and given the output it gets evaluated and marked
         for all descending nodes."""
@@ -123,20 +129,29 @@ class KelebekNode(Node):
 
     def evalImplementation(self):
         i1 = self.getInput(0)
+        # op = self.getOutputs()
         v1 = self.content.edit.text()
 
         if i1 is None:
             self.markInvalid()
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
-            return None  # this is why it's returning none, very clever
+            return None
 
         else:
+
             val = self.evalOperation(i1.eval(), v1)
             self.value = val
             self.markDirty(False)
             self.markInvalid(False)
             self.grNode.setToolTip("")
+
+            # TODO read plan B in the Test Node and implement it.
+            # if op is not None:
+            #     while True:
+            #         data = yield
+            #         for i in op:
+            #             i.send(data)
 
             self.markDescendantsDirty()
             self.evalChildren()
