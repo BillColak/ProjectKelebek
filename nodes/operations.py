@@ -5,10 +5,11 @@ from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 
 from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, broadcast, coroutine
-from kelebek_multithreading import run_threaded_process, DEFAULT_STYLE, COMPLETED_STYLE
+from kelebek_multithreading import run_threaded_process, run_simple_thread
 
 # import requests
 # import time
+from functools import partial
 import os
 from colorama import Fore
 
@@ -17,8 +18,6 @@ from requests import Session
 
 DEBUG = True
 
-# TODO Coding Standards, all returned/(yielded) items must be generators.
-# The yielded generators should all be lists unless other wise stated?
 
 # page_url = 'http://books.toscrape.com/'
 # pagination_path = '//a[text()="next"]/@href'
@@ -52,26 +51,16 @@ class KelebekNodePagination(KelebekNode):
         super().__init__(scene, inputs=[2], outputs=[1])
 
     def pagination(self, input1_page, value1_pagination_path: str):
+        output = []
         print(Fore.CYAN, 'INPUT PAGE:', input1_page, flush=True)
         with Session() as client:
-            for response in paginator(client, input1_page, value1_pagination_path):
-                yield response
-        client.close()
+            for response in paginator(client, input1_page, value1_pagination_path, output):
+                pass
+            client.close()
+        return output
 
-    # @coroutine
     def evalOperation(self, input1_page, value1_pagination_path: str):
-        # output_nodes = self.getOutputs()
-        # broadcaster = broadcast(output_nodes)
-        # while True:
-        #     data = yield  # when this is where you make a connection to this node.
-        #     output = self.pagination(data, value1)  # it no
-        #     broadcaster.send(output)
-        output_nodes = self.getOutputs()
-        print(Fore.CYAN, 'INPUT PAGE:', input1_page, flush=True)
-        with Session() as client:
-            for response in paginator(client, input1_page, value1_pagination_path):
-                yield response
-        client.close()
+        return self.pagination(input1_page, value1_pagination_path)
 
 
 @register_node(OP_NODE_HOP_ALL_LINKS)
@@ -123,17 +112,25 @@ class KelebekNodeMultiItem(KelebekNode):
     content_label = ""
     content_label_objname = "Kelebek_node_multi_item"
 
+    def get_all_items(self, input1, value1):
+        output=[]
+        for i in input1:
+            output.append(get_all(i, value1))
+        return output
+
     def evalOperation(self, input1, value1):
+        return self.get_all_items(input1, value1)
+
+        # output=[]
+        # for i in input1:
+        #     print(type(i))
+        #     output.append(get_all(i, value1))
+        # return output
+
         # This for iterating through TEST NODE one by one
         # for i in input1:
         #     items = get_all(i, value1)
         #     yield items
-
-        output=[]
-        for i in input1:
-            print(type(i))
-            output.append(get_all(i, value1))
-        return output
 
         # for i in input1:
         #     print(type(i))
@@ -215,7 +212,6 @@ class KelebekTestNode(KelebekNode):
 
     def flatten(self, curr_item, output):
         import types
-
         if isinstance(curr_item, types.GeneratorType):
             for item in curr_item:
                 self.flatten(item, output)
@@ -225,33 +221,15 @@ class KelebekTestNode(KelebekNode):
     def clk_btn(self):
         all_inputs_nodes = self.getInputs()
         val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
-        # tODO find a different function to run or make another todo make tool tips for listbox items, don't know wtf
-        #  any of these nodes do. (include if it allows for 1> connections)
-        #  if allows for 1> args upload to list?,
-        #  cyclic iterator is infinite, put time on it.
-        #  if it allows for multiple outputs which is every fucking node, use itertools.cycle.
-        #  Or find out how many outputs a node has and make copies of the generators.
-        #  Or make a delegators that acts as a transistors where it will call the node when requested but turns the
-        #  generators to a list. allowing for multiple iterations
-        # TODO yield the same thing n (output connection) amout of times.
-
-
-        # TODO Plan B make changes to EvalImplementaion so that it has three parts: receive, calculation, send. where
-        #  marked dirty if not EvalOperation, Also DONT FUCKING PUT ANYTHING IN EVALOP OTHER THAN THE OPERATION.
         self.value = val
 
     def evalOperation(self, *args):
-        print(Fore.BLUE, 'ARGS: ', args)
+        print(Fore.GREEN, 'ARGS: ', args)
         # item_list = []
-        # for i in args:
-        #     resp = next(i)
-        #     print(resp)
-            # self.flatten(i, item_list)
+        # for arg in args:
+        #     self.flatten(arg, item_list)
         #
-        # for i, j in enumerate(item_list):
-        #     print(f"Item-{i+1}: ", j)
         # print('Flatten length', len(item_list))
-        # return item_list
 
     def evalImplementation(self):
         all_inputs_nodes = self.getInputs()

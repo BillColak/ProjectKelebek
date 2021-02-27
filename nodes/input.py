@@ -34,7 +34,7 @@ class KelebekNodeInput(KelebekNode):
     def initInnerClasses(self):
         self.content = KelebekInputContent(self)
         self.grNode = KelebekGraphicsNode(self)
-        self.content.edit.textChanged.connect(self.onInputChanged)  # if there is no eval overridden, then
+        # self.content.edit.textChanged.connect(self.onInputChanged)  # if there is no eval overridden, then
 
         # evalImplementation is basically called.
         # self.content.edit.textChanged.connect(partial(

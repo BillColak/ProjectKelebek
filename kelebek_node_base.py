@@ -9,8 +9,8 @@ from nodeeditor.utils import dumpException
 
 from colorama import Fore
 # from WaitingSpinnerWidget import QtWaitingSpinner
-from kelebek_multithreading import run_threaded_process
-DEBUG = True
+from kelebek_multithreading import run_threaded_process, run_simple_thread
+DEBUG = False
 
 
 class KelebekGraphicsNode(QDMGraphicsNode):
@@ -93,17 +93,12 @@ class KelebekNode(Node):
     def __init__(self, scene, inputs=[2], outputs=[1]):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
         self.value = None
-        # self.value_output = []  # if the thread appends  to this. is it trying to access the widget?
-        # The only way to learn this is by trying.
-        # You are swimming in murky waters. Where sense of sight is useless. hence you have to adapt.
-
-        # it's really important to mark all nodes Dirty by default
         self.markDirty()
 
     def initInnerClasses(self):
         self.content = KelebekContent(self)
         self.grNode = KelebekGraphicsNode(self)
-        self.content.edit.textChanged.connect(self.onInputChanged)
+        # self.content.edit.textChanged.connect(self.onInputChanged)
 
     def initSettings(self):
         super().initSettings()
@@ -112,24 +107,11 @@ class KelebekNode(Node):
         self.input_multi_edged = False
         self.output_multi_edged = True
 
-    # def receive(self):
-    #     data = yield
-    #     return data
-    #
-    # def deliver(self):
-    #     pass
-
     def evalOperation(self, input1, input2):
-        """ Node operations happen here, and given the output it gets evaluated and marked
-        for all descending nodes."""
-        # set some value ex: self.value_output = [],
-        # .connect(self.eval) on signals.progress or results
-        # return self.value_output
         return 123
 
     def evalImplementation(self):
         i1 = self.getInput(0)
-        # op = self.getOutputs()
         v1 = self.content.edit.text()
 
         if i1 is None:
@@ -139,24 +121,18 @@ class KelebekNode(Node):
             return None
 
         else:
-
             val = self.evalOperation(i1.eval(), v1)
             self.value = val
             self.markDirty(False)
             self.markInvalid(False)
             self.grNode.setToolTip("")
-
-            # TODO read plan B in the Test Node and implement it.
-            # if op is not None:
-            #     while True:
-            #         data = yield
-            #         for i in op:
-            #             i.send(data)
-
             self.markDescendantsDirty()
             self.evalChildren()
 
             return val
+
+    def thread_finished(self):
+        self.thread_running = False
 
     def eval(self):
         # may also use eval children? which does not eval current node.children= one level below not all children
@@ -166,9 +142,12 @@ class KelebekNode(Node):
             return self.value
 
         try:
-
-            val = self.evalImplementation()
-            return val
+            print('This Node is: ', self)
+            # val = self.evalImplementation()
+            self.thread_running = True
+            val = run_simple_thread(self.evalImplementation, self.thread_finished)
+            if not self.thread_running:
+                return val
         except ValueError as e:
             self.markInvalid()
             self.grNode.setToolTip(str(e))

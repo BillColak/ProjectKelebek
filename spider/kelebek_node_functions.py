@@ -107,13 +107,26 @@ async def fetch(session: ClientSession, url):
         return html_body
 
 
-def paginator(session: Session, url: str, path: str) -> requests.Response:
+def paginator(session: Session, url: str, path: str, output: list):
     resp = session.get(url)
     link = get_item(resp.content, path)
+    output.append(resp)
     # link = next(link)  # turned getItem into gen for singleItem node
+
     yield resp
-    # print(Fore.GREEN, 'LINK:', link)
     if len(link) > 0:
         absolute_url = urljoin(url, link)
-        yield from paginator(session, absolute_url, path)
+        print(Fore.GREEN, 'LINK:', absolute_url)
+        yield from paginator(session, absolute_url, path, output)
+
+
+# def paginator(session: Session, url: str, path: str) -> requests.Response:
+#     resp = session.get(url)
+#     link = get_item(resp.content, path)
+#     # link = next(link)  # turned getItem into gen for singleItem node
+#     yield resp
+#     # print(Fore.GREEN, 'LINK:', link)
+#     if len(link) > 0:
+#         absolute_url = urljoin(url, link)
+#         yield from paginator(session, absolute_url, path)
 

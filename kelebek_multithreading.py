@@ -140,6 +140,38 @@ class Worker(QRunnable):
             self.signals.finished.emit()  # Done
 
 
+class SimpleThread(QRunnable):
+
+    def __init__(self, callback, *args, **kwargs):
+        super(SimpleThread, self).__init__()
+
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            result = self.callback(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
+            exact_type, value = sys.exc_info()[:2]
+            self.signals.error.emit((exact_type, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)
+        finally:
+            self.signals.finished.emit()
+
+
+def run_simple_thread(callback, on_complete, *args, **kwargs):
+    worker = SimpleThread(callback, *args, **kwargs)
+    if on_complete:
+        worker.signals.finished.connect(on_complete)
+    QThreadPool.globalInstance().start(worker)
+
+
 class Dialog(QDialog):
 
     def __init__(self, *args, **kwargs):
