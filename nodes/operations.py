@@ -7,14 +7,14 @@ from nodeeditor.utils import dumpException
 from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, broadcast, coroutine
 from kelebek_multithreading import run_threaded_process, run_simple_thread
 
-# import requests
-# import time
-from functools import partial
+
+import time
 import os
 from colorama import Fore
 
 import asyncio
 from requests import Session
+from concurrent.futures import Future
 
 DEBUG = True
 
@@ -50,17 +50,30 @@ class KelebekNodePagination(KelebekNode):
     def __init__(self, scene):
         super().__init__(scene, inputs=[2], outputs=[1])
 
+    #     self.fut = Future()
+    #
+    # def finished(self, result):
+    #     self.running_thread = True
+    #     self.fut.set_result(result)
+    #     # need to communicate that the operating has completed to descendants
+    #     print("THREAD FINISHED: ", result)
+
     def pagination(self, input1_page, value1_pagination_path: str):
         output = []
         print(Fore.CYAN, 'INPUT PAGE:', input1_page, flush=True)
         with Session() as client:
             for response in paginator(client, input1_page, value1_pagination_path, output):
+                # time.sleep(1)
                 pass
             client.close()
         return output
 
     def evalOperation(self, input1_page, value1_pagination_path: str):
-        return self.pagination(input1_page, value1_pagination_path)
+        x = self.pagination(input1_page, value1_pagination_path)
+        return x
+        # should have this like what it was previously.
+        # run_simple_thread(self.pagination, self.finished, input1_page, value1_pagination_path)
+        # return self.fut
 
 
 @register_node(OP_NODE_HOP_ALL_LINKS)
@@ -72,8 +85,12 @@ class KelebekNodeHopAllLinks(KelebekNode):
     content_label_objname = "Kelebek_hop_all_links"
 
     def evalOperation(self, gen, path):
+        # wait_for, wrap_future
+        if isinstance(gen, Future):
+            gen = gen.result()
         loop = asyncio.get_event_loop()
         x = loop.run_until_complete(multi_link(loop, gen, path))
+        self.running_thread = True
         return x
 
 
@@ -85,13 +102,13 @@ class KelebekNodeSingleItem(KelebekNode):
     content_label = ""
     content_label_objname = "Kelebek_node_single_item"
 
-    # @coroutine
     def evalOperation(self, input1, value1):
         items = []
         for i in input1:
             item = get_item(i, value1)
             print(Fore.BLUE, 'ITEM: ', item)
             items.append(item)
+        self.running_thread = True
         return items
 
         # output_nodes = self.getOutputs()
@@ -113,9 +130,14 @@ class KelebekNodeMultiItem(KelebekNode):
     content_label_objname = "Kelebek_node_multi_item"
 
     def get_all_items(self, input1, value1):
-        output=[]
+        if isinstance(input1, Future):
+            input1 = input1.result()
+            print('input is a future')
+
+        output = []
         for i in input1:
             output.append(get_all(i, value1))
+        self.running_thread = True
         return output
 
     def evalOperation(self, input1, value1):
@@ -159,6 +181,7 @@ class KelebekNodeDisplayOutput(KelebekNode):
 
     def evalOperation(self, *args):
         print(Fore.LIGHTBLACK_EX, 'OUTPUT ARGS: ', *args, flush=True)
+        self.running_thread = True
         return 'DISPLAY NODE ARGS: '+str(args)
 
     def evalImplementation(self):
@@ -210,31 +233,34 @@ class KelebekTestNode(KelebekNode):
         self.grNode = KelebekGraphicsNode(self)
         self.content.run_nodes.clicked.connect(self.clk_btn)
 
-    def flatten(self, curr_item, output):
-        import types
-        if isinstance(curr_item, types.GeneratorType):
-            for item in curr_item:
-                self.flatten(item, output)
-        else:
-            output.append(curr_item)
+    # def flatten(self, curr_item, output):
+    #     import types
+    #     if isinstance(curr_item, types.GeneratorType):
+    #         for item in curr_item:
+    #             self.flatten(item, output)
+    #     else:
+    #         output.append(curr_item)
 
     def clk_btn(self):
+        # val = self.evalImplementation()
+        # print(val)
         all_inputs_nodes = self.getInputs()
         val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
         self.value = val
+        self.eval()
 
     def evalOperation(self, *args):
-        print(Fore.GREEN, 'ARGS: ', args)
-        # item_list = []
-        # for arg in args:
-        #     self.flatten(arg, item_list)
-        #
-        # print('Flatten length', len(item_list))
+        for arg in args:
+            if isinstance(arg, Future):
+                arg = arg.result()
+            print(Fore.GREEN, 'ARG LENGTH: ', len(arg))
+            print(Fore.GREEN, 'ARG: ', arg)
+        x = [i for i in args]
+        # print(x)
+        return x
 
     def evalImplementation(self):
         all_inputs_nodes = self.getInputs()
-        print(Fore.WHITE, 'ALL INPUT NODES: ', all_inputs_nodes, flush=True)
-
         if not all_inputs_nodes:
             self.grNode.setToolTip("Input is not connected")
             self.markInvalid()
@@ -247,6 +273,7 @@ class KelebekTestNode(KelebekNode):
             self.markInvalid()
             return
 
+        # self.value = val
         self.markInvalid(False)
         self.markDirty(False)
         self.grNode.setToolTip("")

@@ -8,9 +8,11 @@ from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER
 from nodeeditor.utils import dumpException
 
 from colorama import Fore
+import inspect
+from concurrent.futures import Future
 # from WaitingSpinnerWidget import QtWaitingSpinner
 from kelebek_multithreading import run_threaded_process, run_simple_thread
-DEBUG = False
+DEBUG = True
 
 
 class KelebekGraphicsNode(QDMGraphicsNode):
@@ -48,21 +50,6 @@ class KelebekContent(QDMNodeContentWidget):
         self.edit = QLineEdit("Enter XPath", self)
         self.edit.setAlignment(Qt.AlignLeft)
         self.contentlayout.addRow('XPath', self.edit)
-        # self.progressbar = QProgressBar()
-        # self.progressbar.setRange(0, 1)
-        # self.spinner = QtWaitingSpinner(self)
-
-    # def submit(self):
-    #     self.spinner.start()
-    #     runnable = RequestRunnable(self)
-    #     QThreadPool.globalInstance().start(runnable)
-    #
-    # @pyqtSlot(str)
-    # def setData(self, data):
-    #     print(data)
-    #     self.spinner.stop()
-    #     self.adjustSize()
-        # self.spinner.adjustSize()
 
     def serialize(self):
         res = super().serialize()
@@ -86,13 +73,13 @@ class KelebekNode(Node):
     op_title = "Undefined"
     content_label = ""
     content_label_objname = "kelebek_node_bg"
-
-    # GraphicsNode_class = KelebekGraphicsNode
-    # NodeContent_class = KelebekContent
+    running_thread = False
 
     def __init__(self, scene, inputs=[2], outputs=[1]):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
         self.value = None
+        self.fut = Future()
+        # self.fut.add_done_callback(self.finished)
         self.markDirty()
 
     def initInnerClasses(self):
@@ -107,6 +94,17 @@ class KelebekNode(Node):
         self.input_multi_edged = False
         self.output_multi_edged = True
 
+    def finished(self, thread_result):
+        self.running_thread = True
+        self.fut.set_result(thread_result)
+        self.value = thread_result
+        print("THREAD FINISHED: ", thread_result)
+        self.eval()
+        get_all_outputs = self.getOutputs()
+        for node in get_all_outputs:
+            node.eval()
+        # self.markDescendantsDirty(False)   #  --> instead fucking getoutputs().eval() # TODO the time it takes to do this is fucking sketchy
+
     def evalOperation(self, input1, input2):
         return 123
 
@@ -120,52 +118,64 @@ class KelebekNode(Node):
             self.grNode.setToolTip("Connect all inputs")
             return None
 
+        elif not i1.running_thread:
+            print('Is Thread running?', not i1.running_thread)
+            self.grNode.setToolTip("Parent node has not finished operations")
+            print(Fore.LIGHTBLACK_EX, 'Input: ', i1.eval())  # for some reason this is returning input as none
+            # TODO if a connection is made while a thread is running, the input is none rather than a future.
+            # if a thread is running a future must be returned
+            # if a future is returned, than that future must be waited before continuing.
+            # a signal should be sent to awaiting threads that future has completed.
+            # set_running_or_notify_cancel()
+            # onMarkedDirty(self) if input is future ait for future, then self.eval().
+
         else:
-            val = self.evalOperation(i1.eval(), v1)
-            self.value = val
-            self.markDirty(False)
-            self.markInvalid(False)
-            self.grNode.setToolTip("")
-            self.markDescendantsDirty()
-            self.evalChildren()
+            if isinstance(i1.eval(), Future):
+                print(Fore.BLACK, 'INPUT IS FUTURE')
+                run_simple_thread(self.evalOperation, self.finished, i1.eval().result(), v1)
+                # self.value = self.fut.result()
+                return self.fut
+            else:
+                # here where the operation have completed before any connection or the input is not future...
+                run_simple_thread(self.evalOperation, self.finished, i1.eval(), v1)
+                # val = self.evalOperation(i1.eval(), v1)
+                # self.value = val
+                self.markDirty(False)
+                self.markInvalid(False)
+                self.grNode.setToolTip("")
+                self.markDescendantsDirty()
+                self.evalChildren()
 
-            return val
-
-    def thread_finished(self):
-        self.thread_running = False
+                return self.fut
 
     def eval(self):
-        # may also use eval children? which does not eval current node.children= one level below not all children
+        print(Fore.YELLOW, '--> Eval Caller Name:', inspect.stack()[1][3])
         if not self.isDirty() and not self.isInvalid():
             if DEBUG:
                 print(Fore.MAGENTA, " _> returning cached %s value:" % self.__class__.__name__, self.value, flush=True)
             return self.value
 
         try:
-            print('This Node is: ', self)
-            # val = self.evalImplementation()
-            self.thread_running = True
-            val = run_simple_thread(self.evalImplementation, self.thread_finished)
-            if not self.thread_running:
-                return val
+            val = self.evalImplementation()
+            return val  # this means eval will always return a future.....
+
         except ValueError as e:
             self.markInvalid()
             self.grNode.setToolTip(str(e))
             self.markDescendantsDirty()
         except Exception as e:
             self.markInvalid()
-            # self.markDescendantsInvalid() may want to also use this
             self.grNode.setToolTip(str(e))
             dumpException(e)
 
     def onInputChanged(self, socket=None):
         if DEBUG:
-            print("%s::__onInputChanged" % self.__class__.__name__)
+            print(Fore.BLUE, "%s::__onInputChanged" % self.__class__.__name__, 'Socket: ', socket)
         self.markDirty()
         self.eval()
 
     # def onMarkedDirty(self):
-    #     pass
+    #     pass  # could wait for future here
     #
     # def onMarkedInvalid(self):
     #     pass

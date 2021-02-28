@@ -63,7 +63,7 @@ class KelebekNodeStore(KelebekNode):
             return
 
         # val = input_node.eval()
-        val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
+        val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))  # dont need to do this unless have a legit operation.
 
         if val is None:
             self.grNode.setToolTip("Input is NaN")

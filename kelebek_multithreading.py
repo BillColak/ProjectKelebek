@@ -88,7 +88,7 @@ class WorkerSignals(QObject):
         `int` indicating % progress
 
     """
-    finished = pyqtSignal()
+    finished = pyqtSignal(bool)
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
     progress = pyqtSignal(int)
@@ -162,13 +162,13 @@ class SimpleThread(QRunnable):
         else:
             self.signals.result.emit(result)
         finally:
-            self.signals.finished.emit()
+            self.signals.finished.emit(True)
 
 
-def run_simple_thread(callback, on_complete, *args, **kwargs):
+def run_simple_thread(callback, return_output, *args, **kwargs):
     worker = SimpleThread(callback, *args, **kwargs)
-    if on_complete:
-        worker.signals.finished.connect(on_complete)
+    if return_output:
+        worker.signals.result.connect(return_output)
     QThreadPool.globalInstance().start(worker)
 
 
@@ -187,6 +187,7 @@ class Dialog(QDialog):
         # self.threadpool = QThreadPool()
         # self.worker = partial(Worker, )
         self.dq = deque()
+        print('QT Thread:', self.thread())
 
         layout = QVBoxLayout(self)
         self.setLayout(layout)
