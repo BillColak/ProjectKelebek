@@ -85,11 +85,25 @@ class KelebekNodeHopAllLinks(KelebekNode):
     content_label_objname = "Kelebek_hop_all_links"
 
     def evalOperation(self, gen, path):
-        # wait_for, wrap_future
+        #  if input if is future --> wait_for, wrap_future
         if isinstance(gen, Future):
             gen = gen.result()
-        loop = asyncio.get_event_loop()
-        x = loop.run_until_complete(multi_link(loop, gen, path))
+
+        # This does not work with qt threads
+        # loop = asyncio.get_event_loop()
+        # x = loop.run_until_complete(multi_link(loop, gen, path))
+
+        # call_soon(), call_later() or call_at()  --> these are not thread safe
+        # run_coroutine_threadsafe -- for async coros only
+        # call_soon_threadsafe --> for non async functions
+        # asyncio.get_running_loop()
+
+        # This works with qt threads but freezes sometimes.
+        new_loop = asyncio.new_event_loop()
+        x = new_loop.run_until_complete(multi_link(new_loop, gen, path))
+
+        # does the event loop close itself?
+        # also this shit is using massive amounts of memory
         self.running_thread = True
         return x
 

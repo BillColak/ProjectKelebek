@@ -1,10 +1,12 @@
 import asyncio
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, wait_for, wrap_future
 from aiohttp import ClientSession
 import requests
 from requests import Session
 from lxml import html as lxml_html
 from urllib.parse import urljoin
+
+# from concurrent.futures import Future as ConcurrentFuture
 
 from colorama import Fore
 
@@ -84,7 +86,12 @@ def get_string_item(value) -> str:
 
 
 async def multi_link(loop: AbstractEventLoop, gen, path: str):
+    asyncio.set_event_loop(loop)  # TODO double check is this is the right thing to do with new_event_loops
     tasks = []
+    # currently dont have to to this because nothing gets passed over until threads are done.
+    # if isinstance(gen, ConcurrentFuture):
+    #     gen = await wait_for(wrap_future(gen), None)
+
     async with ClientSession(loop=loop) as session:
         for i, j in enumerate(gen):
             # print(Fore.MAGENTA, f'Page-{i + 1}: ', j.url, flush=True)

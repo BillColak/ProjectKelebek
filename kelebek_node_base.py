@@ -12,7 +12,7 @@ import inspect
 from concurrent.futures import Future
 # from WaitingSpinnerWidget import QtWaitingSpinner
 from kelebek_multithreading import run_threaded_process, run_simple_thread
-DEBUG = True
+DEBUG = False
 
 
 class KelebekGraphicsNode(QDMGraphicsNode):
@@ -98,7 +98,7 @@ class KelebekNode(Node):
         self.running_thread = True
         self.fut.set_result(thread_result)
         self.value = thread_result
-        print("THREAD FINISHED: ", thread_result)
+        print("THREAD FINISHED: ")
         self.eval()
         get_all_outputs = self.getOutputs()
         for node in get_all_outputs:
@@ -122,12 +122,26 @@ class KelebekNode(Node):
             print('Is Thread running?', not i1.running_thread)
             self.grNode.setToolTip("Parent node has not finished operations")
             print(Fore.LIGHTBLACK_EX, 'Input: ', i1.eval())  # for some reason this is returning input as none
-            # TODO if a connection is made while a thread is running, the input is none rather than a future.
+            # TODO if a connection is made while a thread is running, the input is none rather than a future. TODO
+            #  for interactivity during background operation specifically async functions, wait_for(wrap_future())
+            #  but have it in the base node because apperanly you can get one page with
+            #  aiohhtp, aiohttp.request('GET', url), because the end goal is to convert all functions to async/ or gen?
+            # can also use dbeazley's from_coroutine functions to mix sync async functions?
+
             # if a thread is running a future must be returned
             # if a future is returned, than that future must be waited before continuing.
             # a signal should be sent to awaiting threads that future has completed.
             # set_running_or_notify_cancel()
             # onMarkedDirty(self) if input is future ait for future, then self.eval().
+            # future = asyncio.run_coroutine_threadsafe(coro_func(), loop)
+            # https://docs.python.org/3/library/asyncio-dev.html#asyncio-multithreading
+
+            # the app the is freezing up at the point of making an edge connection with a socket. --> Because it goes
+            # to thread and then back -> rinse n repeat. Is it possible to have all the back ground operations in a
+            # different thread? most likely do to transfer of huge memory files. Generators will have to be
+            # implemented to fix this.
+            # https://hackernoon.com/threaded-asynchronous-magic-and-how-to-wield-it-bba9ed602c32
+
 
         else:
             if isinstance(i1.eval(), Future):
@@ -137,6 +151,10 @@ class KelebekNode(Node):
                 return self.fut
             else:
                 # here where the operation have completed before any connection or the input is not future...
+                # if generators are re implemented, calling next(i.eval()) here instead of having for loops
+                # in each node operations makes sense. also await wait_for(wrap_future(fut), None) generator.
+                # if future fails during scraping loop.create_future() = new_future
+                # add_done_callback(callback, *, context=None) -- can always use this, but u have to use partial?
                 run_simple_thread(self.evalOperation, self.finished, i1.eval(), v1)
                 # val = self.evalOperation(i1.eval(), v1)
                 # self.value = val

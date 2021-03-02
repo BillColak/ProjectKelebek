@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import *
 #                                  Qt.QueuedConnection,
 #                                  Q_ARG(str, "finish"))
 
-# todo https://stackoverflow.com/questions/47359847/pyqt5-loading-spinner-halts-on-post-request
+# https://stackoverflow.com/questions/47359847/pyqt5-loading-spinner-halts-on-post-request
 
 
 class QtWaitingSpinner(QWidget):
