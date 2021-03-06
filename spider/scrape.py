@@ -105,7 +105,7 @@ def pagination_xpath(text_value: str, attributes: dict or None, path: str) -> st
         return f'//{xpath_}[normalize-space(text())="{text_value}"]/@href'
 
 
-def single_item(attributes: dict or None, path: str) -> str:
+def single_item(path: str, attributes: dict = None) -> str:
     xpath_ = get_string_item(path)
     if attributes:
         attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
@@ -118,19 +118,32 @@ def single_item(attributes: dict or None, path: str) -> str:
         return f'//{xpath_}' + '/text()'
 
 
-def multi_item(attributes: dict or None, path: str) -> str:
+def multi_item(path: str, attributes: dict = None) -> str:
     xpath_ = get_string(path)
     if attributes:
         attrib_xpath = [f'@{key}' for key in attributes.keys() if key != 'style']
         if len(attrib_xpath) > 0:
-            return f'//{xpath_}/[' + ' and '.join(attrib_xpath) + ']/text()'
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/text()'
         else:
             return f'//{xpath_}' + '/text()'
     else:
         return f'//{xpath_}' + '/text()'
 
 
-def multi_link(attributes: dict or None, path: str) -> str:
+def single_link(path: str, attributes: dict = None) -> str:
+    xpath_ = get_string_item(path)
+    if attributes:
+        attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
+                        key != 'style']
+        if len(attrib_xpath) > 0:
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/@href'
+        else:
+            return f'//{xpath_}' + '/@href'
+    else:
+        return f'//{xpath_}' + '/@href'
+
+
+def multi_link(path: str, attributes: dict = None) -> str:
     xpath_ = get_string(path)
     if attributes:
         attrib_xpath = [f'@{key}' for key in attributes.keys() if key != 'href' and key != 'style']
@@ -166,6 +179,7 @@ def get_string_item(value) -> str:
     else:
         return "/".join(path[-3:-1]) + '/' + path[-1].split('[')[0]
 
+
 # ------------ CRAIGSLIST -------------------------
 
 # attrib = {'href': 'https://vancouver.craigslist.org/search/cto',
@@ -196,9 +210,17 @@ def get_string_item(value) -> str:
 
 # ------------ KIJIJI -------------------------
 
-# attrib = {'title': 'Next', 'href': '/b-cars-trucks/calgary/new__used/page-2/c174l1700199a49'}
+attrib = {'title': 'Next', 'href': '/b-cars-trucks/calgary/new__used/page-2/c174l1700199a49'}
 # url = 'https://www.kijiji.ca/b-cars-trucks/calgary/new__used/c174l1700199a49'
-# path = '/html/body/div[3]/div[3]/div[3]/div[3]/div[3]/div[57]/div/a[10]'
+path = '/html/body/div[3]/div[3]/div[3]/div[3]/div[3]/div[57]/div/a[10]'
+
+# x = {'attributes': {'href': 'catalogue/page-2.html'}, 'text': 'next', 'xpath': '/html/body/div/div/div/div/section/div[2]/div/ul/li[2]/a'}
+# ref_path = single_link(x.get('xpath'), x.get('attributes'))
+
+x = {'attributes': {'href': 'catalogue/the-boys-in-the-boat-nine-americans-and-their-epic-quest-for-gold-at-the-1936-berlin-olympics_992/index.html', 'title': 'The Boys in the Boat: Nine Americans and Their Epic Quest for Gold at the 1936 Berlin Olympics'}, 'text': 'The Boys in the ...', 'xpath': '/html/body/div/div/div/div/section/div[2]/ol/li[9]/article/h3/a'}
+# ref_path = multi_link(x.get('xpath'), x.get('attributes'))
+ref_path = single_item(x.get('xpath'), x.get('attributes'))
+print('ITEMS: ', ref_path)
 
 # element = scrape_single_link(path, attrib)
 # scrape_pagination(url, element)

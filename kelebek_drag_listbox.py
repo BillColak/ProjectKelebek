@@ -39,7 +39,6 @@ class QDMDragListbox(QListWidget):
         item.setData(Qt.UserRole, pixmap)
         item.setData(Qt.UserRole + 1, op_code)
 
-
     def startDrag(self, *args, **kwargs):
         try:
             item = self.currentItem()

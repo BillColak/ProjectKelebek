@@ -4,11 +4,9 @@ from kelebek_conf import *
 from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 
-from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, broadcast, coroutine
-from kelebek_multithreading import run_threaded_process, run_simple_thread
+from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, refactor_path_pagination_xpath,\
+    refactor_path_single_link, refactor_path_multi_link, refactor_path_single_item, refactor_path_multi_item
 
-
-import time
 import os
 from colorama import Fore
 
@@ -21,22 +19,12 @@ DEBUG = True
 
 # page_url = 'http://books.toscrape.com/'
 # pagination_path = '//a[text()="next"]/@href'
-# multi_title_path = '//h3/a/@href'
+# multi_title_link_path = '//h3/a/@href'
 
 price_path = '//div[1]/div[2]/p[normalize-space(@class)="price_color"]/text()'
 title_path = '//h1/text()'
-
-
-@register_node(OP_NODE_HOP_LINK)
-class KelebekNodeHopLink(KelebekNode):
-    # icon = "icons/sub.png"
-    op_code = OP_NODE_HOP_LINK
-    op_title = "Hop Link"
-    content_label = ""
-    content_label_objname = "Kelebek_node_hop_link"
-
-    def evalOperation(self, input1, value1):
-        print("NOT IMPLEMENTED")
+star_rating = "//*[contains(@class, 'star-rating')]/@class"
+product_description = "//*[@id='product_description']/following-sibling::p/text()"
 
 
 @register_node(OP_NODE_PAGINATION)
@@ -57,6 +45,12 @@ class KelebekNodePagination(KelebekNode):
     #     self.fut.set_result(result)
     #     # need to communicate that the operating has completed to descendants
     #     print("THREAD FINISHED: ", result)
+
+    def xpath_operation(self, **kwargs) -> str:
+        text_value = kwargs.get('text')
+        path = kwargs.get('xpath')
+        attributes = kwargs.get('attributes')
+        return refactor_path_pagination_xpath(text_value, path, attributes)
 
     def pagination(self, input1_page, value1_pagination_path: str):
         output = []
@@ -84,6 +78,11 @@ class KelebekNodeHopAllLinks(KelebekNode):
     content_label = ""
     content_label_objname = "Kelebek_hop_all_links"
 
+    def xpath_operation(self, **kwargs) -> str:
+        path = kwargs.get('xpath')
+        attributes = kwargs.get('attributes')
+        return refactor_path_multi_link(path, attributes)
+
     def evalOperation(self, gen, path):
         #  if input if is future --> wait_for, wrap_future
         if isinstance(gen, Future):
@@ -98,7 +97,7 @@ class KelebekNodeHopAllLinks(KelebekNode):
         # call_soon_threadsafe --> for non async functions
         # asyncio.get_running_loop()
 
-        # This works with qt threads but freezes sometimes.
+        # This works with qt threads but freezes sometimes. see note in the node_base.
         new_loop = asyncio.new_event_loop()
         x = new_loop.run_until_complete(multi_link(new_loop, gen, path))
 
@@ -106,6 +105,24 @@ class KelebekNodeHopAllLinks(KelebekNode):
         # also this shit is using massive amounts of memory
         self.running_thread = True
         return x
+
+
+@register_node(OP_NODE_HOP_LINK)
+class KelebekNodeHopLink(KelebekNode):
+    # icon = "icons/sub.png"
+    op_code = OP_NODE_HOP_LINK
+    op_title = "Hop Link"
+    content_label = ""
+    content_label_objname = "Kelebek_node_hop_link"
+
+    def xpath_operation(self, **kwargs) -> str:
+        path = kwargs.get('xpath')
+        attributes = kwargs.get('attributes')
+        return refactor_path_single_link(path, attributes)
+
+
+    def evalOperation(self, input1, value1):
+        print("NOT IMPLEMENTED")
 
 
 @register_node(OP_NODE_SINGLE_ITEM)
@@ -116,6 +133,11 @@ class KelebekNodeSingleItem(KelebekNode):
     content_label = ""
     content_label_objname = "Kelebek_node_single_item"
 
+    def xpath_operation(self, **kwargs) -> str:
+        path = kwargs.get('xpath')
+        attributes = kwargs.get('attributes')
+        return refactor_path_single_item(path, attributes)
+
     def evalOperation(self, input1, value1):
         items = []
         for i in input1:
@@ -125,15 +147,6 @@ class KelebekNodeSingleItem(KelebekNode):
         self.running_thread = True
         return items
 
-        # output_nodes = self.getOutputs()
-        # broadcaster = broadcast(output_nodes)
-        # while True:
-        #     data = yield
-
-        # for i in input1:
-        #     print(type(i))
-        #     yield from get_item(i, value1)
-
 
 @register_node(OP_NODE_MULTI_ITEM)
 class KelebekNodeMultiItem(KelebekNode):
@@ -142,6 +155,11 @@ class KelebekNodeMultiItem(KelebekNode):
     op_title = "Get All"
     content_label = ""
     content_label_objname = "Kelebek_node_multi_item"
+
+    def xpath_operation(self, **kwargs) -> str:
+        path = kwargs.get('xpath')
+        attributes = kwargs.get('attributes')
+        return refactor_path_multi_item(path, attributes)
 
     def get_all_items(self, input1, value1):
         if isinstance(input1, Future):
@@ -196,7 +214,7 @@ class KelebekNodeDisplayOutput(KelebekNode):
     def evalOperation(self, *args):
         print(Fore.LIGHTBLACK_EX, 'OUTPUT ARGS: ', *args, flush=True)
         self.running_thread = True
-        return 'DISPLAY NODE ARGS: '+str(args)
+        return args
 
     def evalImplementation(self):
         all_inputs_nodes = self.getInputs()
@@ -207,14 +225,20 @@ class KelebekNodeDisplayOutput(KelebekNode):
             self.markInvalid()
             self.markDescendantsDirty()
             self.grNode.setToolTip("Connect all inputs")
-            return None
+            return None  # because of this (same thing in the node base), the display thinks its inputs are none.
+            # this is wrong as the new coding standards indicate that future should be returned. BUT.
+            # if this is the case how do you evaluate this. and provide feedback to the user.
+            # would have to provide a custom future object which indicates that its own
+            # input is also waiting on something or does not have an input. hence it is none.
+            # ^is there a way to get around this with qt threads and signals?
 
         else:
             val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
+            print('Display val: ', val)
 
             self.value = val
 
-            self.content.text_edit.setPlainText("%s" % val)
+            self.content.text_edit.setPlainText("%s" % str(val))
             self.markDirty(False)
             self.markInvalid(False)
             self.grNode.setToolTip("")
@@ -227,6 +251,7 @@ class KelebekNodeDisplayOutput(KelebekNode):
 
 @register_node(OP_NODE_TEST)
 class KelebekTestNode(KelebekNode):
+    icon = "icons/sub.png"
     op_code = OP_NODE_TEST
     op_title = "Test Node"
     content_label = ""
@@ -256,8 +281,6 @@ class KelebekTestNode(KelebekNode):
     #         output.append(curr_item)
 
     def clk_btn(self):
-        # val = self.evalImplementation()
-        # print(val)
         all_inputs_nodes = self.getInputs()
         val = self.evalOperation(*(node.eval() for node in all_inputs_nodes))
         self.value = val
@@ -270,7 +293,6 @@ class KelebekTestNode(KelebekNode):
             print(Fore.GREEN, 'ARG LENGTH: ', len(arg))
             print(Fore.GREEN, 'ARG: ', arg)
         x = [i for i in args]
-        # print(x)
         return x
 
     def evalImplementation(self):

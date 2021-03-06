@@ -1,14 +1,14 @@
 import asyncio
-from asyncio import AbstractEventLoop, wait_for, wrap_future
+from asyncio import AbstractEventLoop
 from aiohttp import ClientSession
 import requests
 from requests import Session
 from lxml import html as lxml_html
 from urllib.parse import urljoin
-
-# from concurrent.futures import Future as ConcurrentFuture
-
 from colorama import Fore
+import re
+
+# TODO the functions in this file need a make over and optimization.
 
 
 def coroutine(fn):
@@ -38,8 +38,9 @@ def get_first(list_elements):
         return ''
 
 
-def get_item(resp: str or bytes, path) -> str:
+def get_item(resp: str or bytes, path, attributes: dict = None) -> str:
     """This gets the first item"""
+    path = refactor_path_single_item(path, attributes)
     if isinstance(resp, requests.models.Response):
         return get_first(xpath_root(resp.content).xpath(path))
     else:
@@ -62,27 +63,6 @@ def get_all(resp: str or bytes, path) -> list:
     #     yield xpath_root(resp.content).xpath(path)
     # else:
     #     yield xpath_root(resp).xpath(path)
-
-
-def single_item(attributes: dict or None, path: str) -> str:
-    xpath_ = get_string_item(path)
-    if attributes:
-        attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
-                        key != 'style']
-        if len(attrib_xpath) > 0:
-            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/text()'
-        else:
-            return f'//{xpath_}' + '/text()'
-    else:
-        return f'//{xpath_}' + '/text()'
-
-
-def get_string_item(value) -> str:
-    path = str(value).split('/')
-    if [i for i in ['table', 'tbody', 'tr', 'td'] if i in path]:
-        return "/".join(path[-3:])
-    else:
-        return "/".join(path[-3:-1]) + '/' + path[-1].split('[')[0]
 
 
 async def multi_link(loop: AbstractEventLoop, gen, path: str):
@@ -127,13 +107,89 @@ def paginator(session: Session, url: str, path: str, output: list):
         yield from paginator(session, absolute_url, path, output)
 
 
-# def paginator(session: Session, url: str, path: str) -> requests.Response:
-#     resp = session.get(url)
-#     link = get_item(resp.content, path)
-#     # link = next(link)  # turned getItem into gen for singleItem node
-#     yield resp
-#     # print(Fore.GREEN, 'LINK:', link)
-#     if len(link) > 0:
-#         absolute_url = urljoin(url, link)
-#         yield from paginator(session, absolute_url, path)
+def get_numbers(value) -> float:
+    if value:
+        number = re.search(r'\d+\.\d+', value)
+        return float(number.group())
 
+
+def get_string(value) -> str:
+    path = str(value).split('/')
+    if [i for i in ['table', 'tbody', 'tr', 'td'] if i in path]:
+        return "/".join(path[1:][-2:])
+    else:
+        if re.findall('\W', path[-1]):
+            return path[-2] + '/' + str(re.findall(r"\b[a-zA-Z]+\b", path[-1])[0])
+        else:
+            return '/'.join([i.split('[')[0] for i in path[-2:]])
+
+
+def get_string_item(value) -> str:
+    path = str(value).split('/')
+    if [i for i in ['table', 'tbody', 'tr', 'td'] if i in path]:
+        return "/".join(path[-3:])
+    else:
+        return "/".join(path[-3:-1]) + '/' + path[-1].split('[')[0]
+
+
+def refactor_path_single_item(path: str, attributes: dict = None) -> str:
+    xpath_ = get_string_item(path)
+    if attributes:
+        attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
+                        key != 'style']
+        if len(attrib_xpath) > 0:
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/text()'
+        else:
+            return f'//{xpath_}' + '/text()'
+    else:
+        return f'//{xpath_}' + '/text()'
+
+
+def refactor_path_multi_item(path: str, attributes: dict = None) -> str:
+    xpath_ = get_string(path)
+    if attributes:
+        attrib_xpath = [f'@{key}' for key in attributes.keys() if key != 'style']
+        if len(attrib_xpath) > 0:
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/text()'
+        else:
+            return f'//{xpath_}' + '/text()'
+    else:
+        return f'//{xpath_}' + '/text()'
+
+
+def refactor_path_single_link(path: str, attributes: dict = None) -> str:
+    xpath_ = get_string_item(path)
+    if attributes:
+        attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
+                        key != 'style']
+        if len(attrib_xpath) > 0:
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/@href'
+        else:
+            return f'//{xpath_}' + '/@href'
+    else:
+        return f'//{xpath_}' + '/@href'
+
+
+def refactor_path_multi_link(path: str, attributes: dict = None) -> str:
+    xpath_ = get_string(path)
+    if attributes:
+        attrib_xpath = [f'@{key}' for key in attributes.keys() if key != 'href' and key != 'style']
+        if len(attrib_xpath) > 0:
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + ']/@href'
+        else:
+            return f'//{xpath_}' + ' and '.join(attrib_xpath) + '/@href'
+    else:
+        return f'//{xpath_}' + '/@href'
+
+
+def refactor_path_pagination_xpath(text_value: str, path: str, attributes: dict = None) -> str:
+    xpath_ = get_string(path)
+    if attributes:
+        attrib_xpath = [f'normalize-space(@{key})="{value.strip()}"' for key, value in attributes.items() if
+                        key != 'href' and key != 'style']
+        if len(attrib_xpath) > 0:
+            return f'//{xpath_}[' + ' and '.join(attrib_xpath) + f' and normalize-space(text())="{text_value}"]/@href'
+        else:
+            return f'//{xpath_}[normalize-space(text())="{text_value}"]/@href'
+    else:
+        return f'//{xpath_}[normalize-space(text())="{text_value}"]/@href'

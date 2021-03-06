@@ -3,7 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
-from kelebek_browser import QtBrowser
+from kelebek_browser import QtBrowserWidget, QuteBrowser
 
 from nodeeditor.utils import loadStylesheets
 from nodeeditor.node_editor_window import NodeEditorWindow
@@ -66,7 +66,6 @@ class KelebekWindow(NodeEditorWindow):
 
         self.createActions()
         self.createMenus()
-        self.createToolBars() # this doesnt do anything
         self.createStatusBar()
         self.updateMenus()
 
@@ -98,10 +97,10 @@ class KelebekWindow(NodeEditorWindow):
 
     def stackedWidget(self):
         central_widget = QWidget()
-
         self.stackedlay = QStackedLayout(central_widget)
-
-        self.kelebek_browser = QtBrowser()
+        self.browser = QuteBrowser()
+        self.kelebek_browser = QtBrowserWidget(self.browser)
+        # self.kelebek_browser = QtBrowserWidget()
         self.stackedlay.addWidget(self.kelebek_browser)
         self.stackedlay.addWidget(self.mdiArea)
 
@@ -126,6 +125,30 @@ class KelebekWindow(NodeEditorWindow):
         navtb.addAction(self.highlight)
         self.highlight.triggered.connect(self.kelebek_browser.inspect_element)
         navtb.addSeparator()
+
+        self.play_btn = QAction(QIcon('images/play-hot.png'), 'Button', self)
+        navtb.addAction(self.play_btn)
+        self.play_btn.triggered.connect(self.print_editor_widget)
+
+    def print_editor_widget(self):
+        active = self.getCurrentNodeEditorWidget()
+        print('Active:', active)
+        print('mdiArea:', self.mdiArea.subWindowList())
+        print('current window:', self.mdiArea.currentSubWindow().widget().scene)
+        print('window:', self.mdiArea.window())
+        print('Getting node from op code without scene: ', get_class_from_opcode(3))
+        print(self.mdiArea.ActivationHistoryOrder)
+
+        # new_kelebek_node = get_class_from_opcode(3)
+        # new_kelebek_node.setPos(0, 0)
+    #     self.mdiArea.currentSubWindow()
+    #     self.mdiArea.ActivationHistoryOrder
+    #     self.mdiArea.
+    # #     self.mdiArea.subWindowActivated.connect(self.whaever)
+    #
+    # def whaever(self, s):
+    #     print(s)
+
 
     def window1(self):
         self.stackedlay.setCurrentIndex(0)
@@ -217,6 +240,12 @@ class KelebekWindow(NodeEditorWindow):
     def updateMenus(self):
         # print("update Menus")
         active = self.getCurrentNodeEditorWidget()
+        # # print("active window menu:", active)
+
+        if active is not None:
+            self.browser.scene = active.scene
+            print('browser scene:', self.browser.scene)
+
         hasMdiChild = (active is not None)
 
         self.actSave.setEnabled(hasMdiChild)
@@ -288,9 +317,6 @@ class KelebekWindow(NodeEditorWindow):
             self.nodesDock.hide()
         else:
             self.nodesDock.show()
-
-    def createToolBars(self):
-        pass
 
     def createNodesDock(self):
         self.nodesListWidget = QDMDragListbox()

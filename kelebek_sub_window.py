@@ -7,8 +7,8 @@ from nodeeditor.node_edge import EDGE_TYPE_DIRECT, EDGE_TYPE_BEZIER
 from nodeeditor.node_graphics_view import MODE_EDGE_DRAG#, MODE_EDGES_REROUTING
 from nodeeditor.utils import dumpException
 
-DEBUG = False
-DEBUG_CONTEXT = False
+DEBUG = True
+DEBUG_CONTEXT = True
 
 
 class KelebekSubWindow(NodeEditorWidget):
@@ -100,13 +100,11 @@ class KelebekSubWindow(NodeEditorWidget):
                 self.scene.history.storeHistory("Created node %s" % node.__class__.__name__)
             except Exception as e: dumpException(e)
 
-
             event.setDropAction(Qt.MoveAction)
             event.accept()
         else:
             # print(" ... drop ignored, not requested format '%s'" % LISTBOX_MIMETYPE)
             event.ignore()
-
 
     def contextMenuEvent(self, event):
         try:
@@ -193,10 +191,12 @@ class KelebekSubWindow(NodeEditorWidget):
         action = context_menu.exec_(self.mapToGlobal(event.pos()))
 
         if action is not None:
+            print('scene: ', self.scene, 'action:', action, 'action data: ', action.data())
             new_kelebek_node = get_class_from_opcode(action.data())(self.scene)
             scene_pos = self.scene.getView().mapToScene(event.pos())
             new_kelebek_node.setPos(scene_pos.x(), scene_pos.y())
-            if DEBUG_CONTEXT: print("Selected node:", new_kelebek_node)
+            print('x:', scene_pos.x(), 'y:', scene_pos.y())
+            if DEBUG_CONTEXT: print("Selected node:", new_kelebek_node, 'Position: ', scene_pos, 'scene:', self.scene, 'op_code:', action.data(), 'event:', event)
 
             if self.scene.getView().mode == MODE_EDGE_DRAG:
                 # if we were dragging an edge...

@@ -2,9 +2,19 @@ from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets, QtWebChannel
 from jinja2 import Template
 import os
 
+from functools import partial
+from kelebek_sub_window import KelebekSubWindow
+from kelebek_conf import *
+
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
-HOME = 'https://www.google.com/'
+# HOME = 'https://www.google.com/'
+HOME = "https://books.toscrape.com/"
+
+DEBUG_CONTEXT = True
+
+
+# TODO custom contextmenu that adds node to the editor.
 
 
 class Element(QtCore.QObject):
@@ -89,7 +99,6 @@ class Helper(Element):  # this is the object
               });
             }
             document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
                 e = e || window.event;
                 var target = e.target || e.srcElement;
                 var xpath = Elements.DOMPath.xPath(target, false);
@@ -108,21 +117,19 @@ class Helper(Element):  # this is the object
         return Template(js).render(name=self.name)
 
     @QtCore.pyqtSlot(str, str, str, str, str, str, str, str, str)
-    def receive_xpath(self, names, values, xpath, local_name, text, class_name, image, link, parent_name):
-        self.xpathClicked.emit(names, values, xpath, local_name, text, class_name, image, link, parent_name)
+    def receive_xpath(self, attribute_names, attribute_values, xpath, local_name, text, class_name, image, link, parent_name):
+        self.xpathClicked.emit(attribute_names, attribute_values, xpath, local_name, text, class_name, image, link, parent_name)
 
 
-class QtBrowser(QtWidgets.QWidget):
+class QtBrowserWidget(QtWidgets.QWidget):
 
-    def __init__(self, *args, **kwargs):
-        super(QtBrowser, self).__init__(*args, **kwargs)
-
-    # def browser(self):
-    #     self.browserwindow = QtWidgets.QWidget()
-    #     self.browserwindow.setLayout(QtWidgets.QVBoxLayout())
+    def __init__(self, view, *args, **kwargs):
+        super(QtBrowserWidget, self).__init__(*args, **kwargs)
+        # self.scene = scene
         self.setLayout(QtWidgets.QVBoxLayout())
         # BROWSER
-        self.browser = QtWebEngineWidgets.QWebEngineView()
+        # self.browser = QtWebEngineWidgets.QWebEngineView()
+        self.browser = view
         self.page = WebEnginePage()
 
         self.xpath_helper = Helper("xpath_helper")
@@ -134,7 +141,8 @@ class QtBrowser(QtWidgets.QWidget):
         self.browser.urlChanged.connect(self.update_urlbar)
         # self.browser.loadFinished.connect(self.update_title)
         profile = self.page.profile().httpUserAgent()
-        print(profile)
+        print('page profile: ', profile)
+
         # BROWSER NAVIGATION BAR
         self.browsernavbar = QtWidgets.QWidget()
         self.browsernavbar.setLayout(QtWidgets.QHBoxLayout())
@@ -166,8 +174,6 @@ class QtBrowser(QtWidgets.QWidget):
         self.urlbar.returnPressed.connect(self.navigate_to_url)
         self.browsernavbar.layout().addWidget(self.urlbar)
 
-        # self.browserwindow.layout().addWidget(self.browsernavbar)
-        # self.browserwindow.layout().addWidget(self.browser)
         self.layout().addWidget(self.browsernavbar)
         self.layout().addWidget(self.browser)
         self.browser.load(QtCore.QUrl(HOME))
@@ -190,9 +196,21 @@ class QtBrowser(QtWidgets.QWidget):
         self.urlbar.setText(q.toString())
         self.urlbar.setCursorPosition(0)
 
-    def return_xpath(self, names, values, xpath, local_name, text, class_name, image, link, parent_name):
-        print(names, values, xpath, local_name, text, class_name, image, link, parent_name)
-        return names, values, xpath, local_name, text, class_name, image, link, parent_name
+    def return_xpath(self, attribute_names, attribute_values, xpath, local_name, text, class_name, image, link, parent_name):
+
+        if attribute_names or attribute_values:
+            attributes = dict(zip(str(attribute_names).split(","), str(attribute_values).split(",")))
+        else:
+            attributes = None
+
+        node_input = {
+            'attributes': attributes,
+            'text': text,
+            'xpath': xpath
+        }
+
+        self.browser.value = node_input
+        print('BROWSER VALUE: ', self.browser.value)
 
     def inspect_element(self):
         if self.page.onLoadFinished:
@@ -209,3 +227,87 @@ class QtBrowser(QtWidgets.QWidget):
             })
             }, false);
             """)
+
+
+class QuteBrowser(QtWebEngineWidgets.QWebEngineView):
+    def __init__(self, *args, **kwargs):
+        super(QuteBrowser, self).__init__(*args, **kwargs)
+        self.value = None
+
+        self.scene = None
+        print('SELF.SCENE: ', self.scene)
+
+        self.initNewNodeActions()
+
+    def initNewNodeActions(self):
+        self.node_actions = {}
+        keys = list(KELEBEK_NODES.keys())
+        keys.sort()
+        for key in keys:
+            node = KELEBEK_NODES[key]
+            self.node_actions[node.op_code] = QtWidgets.QAction(QtGui.QIcon(node.icon), node.op_title)
+            self.node_actions[node.op_code].setData(node.op_code)
+
+    def initNodesContextMenu(self):
+        context_menu = QtWidgets.QMenu(self)
+        keys = list(KELEBEK_NODES.keys())
+        keys.sort()
+        for key in keys: context_menu.addAction(self.node_actions[key])
+        return context_menu
+
+    def handleNewNodeContextMenu(self, event):
+        import random
+        context_menu = self.initNodesContextMenu()
+        action = context_menu.exec_(self.mapToGlobal(event.pos()))
+        x = random.randrange(-200, 200, 20)
+        y = random.randrange(-200, 200, 20)
+
+        if action is not None:
+            if self.scene is not None:
+                new_kelebek_node = get_class_from_opcode(action.data())(self.scene)
+                new_kelebek_node.setPos(x, y)
+                # print('Node Value: ', self.value)
+
+                try:
+                    print('Node Value: ', self.value)
+                    text = new_kelebek_node.xpath_operation(**self.value)
+                    new_kelebek_node.content.edit.setText(text)
+
+                except Exception as e:
+                    print('Error inserting text.', e)
+                else:
+                    pass
+
+                self.scene.history.storeHistory("Created %s" % new_kelebek_node.__class__.__name__)
+            else:
+                print('SCENE IS NONE')
+
+    def contextMenuEvent(self, event):
+        if self.scene:
+            self.handleNewNodeContextMenu(event)
+        # else:
+        #     super().contextMenuEvent(event)
+
+    # def addMyItem(self, name, icon=None, op_code=0):
+    #     pixmap = QtGui.QPixmap(icon if icon is not None else ".")
+    #
+    #     item = QtWidgets.QAction(QtGui.QIcon(pixmap), name, self)
+    #     item.triggered.connect(partial(self.addNodeAction, name))
+    #     item.setData(op_code)
+    #     self.menu.addAction(item)
+    #
+    # def contextMenuEvent(self, event):
+    #     # try:
+    #     self.menu = QtWidgets.QMenu(self)
+    #     keys = list(KELEBEK_NODES.keys())
+    #     keys.sort()
+    #     for key in keys:
+    #         node = get_class_from_opcode(key)
+    #         self.addMyItem(node.op_title, node.icon, node.op_code)
+    #     self.menu.exec_(self.mapToGlobal(event.pos()))
+    #     # except:
+    #     #     print('Error at ContextMenu Event')
+    #
+    # def addNodeAction(self, node):
+    #     print(f'Added: {node}')
+

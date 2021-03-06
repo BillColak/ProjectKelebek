@@ -11,7 +11,7 @@ from colorama import Fore
 import inspect
 from concurrent.futures import Future
 # from WaitingSpinnerWidget import QtWaitingSpinner
-from kelebek_multithreading import run_threaded_process, run_simple_thread
+from kelebek_multithreading import run_simple_thread
 DEBUG = False
 
 
@@ -81,6 +81,9 @@ class KelebekNode(Node):
         self.fut = Future()
         # self.fut.add_done_callback(self.finished)
         self.markDirty()
+        # TODO Future exceptions.
+        # TODO if xpath is not valid. User should click eval after confirming.->remove the marking shit from contextmenu
+        # TODO revamp eval as it is not providing useful tooltips.
 
     def initInnerClasses(self):
         self.content = KelebekContent(self)
@@ -103,7 +106,6 @@ class KelebekNode(Node):
         get_all_outputs = self.getOutputs()
         for node in get_all_outputs:
             node.eval()
-        # self.markDescendantsDirty(False)   #  --> instead fucking getoutputs().eval() # TODO the time it takes to do this is fucking sketchy
 
     def evalOperation(self, input1, input2):
         return 123
@@ -111,6 +113,7 @@ class KelebekNode(Node):
     def evalImplementation(self):
         i1 = self.getInput(0)
         v1 = self.content.edit.text()
+        # self.content.edit.setText()
 
         if i1 is None:
             self.markInvalid()
@@ -122,7 +125,7 @@ class KelebekNode(Node):
             print('Is Thread running?', not i1.running_thread)
             self.grNode.setToolTip("Parent node has not finished operations")
             print(Fore.LIGHTBLACK_EX, 'Input: ', i1.eval())  # for some reason this is returning input as none
-            # TODO if a connection is made while a thread is running, the input is none rather than a future. TODO
+            #  if a connection is made while a thread is running, the input is none rather than a future.
             #  for interactivity during background operation specifically async functions, wait_for(wrap_future())
             #  but have it in the base node because apperanly you can get one page with
             #  aiohhtp, aiohttp.request('GET', url), because the end goal is to convert all functions to async/ or gen?
@@ -141,7 +144,6 @@ class KelebekNode(Node):
             # different thread? most likely do to transfer of huge memory files. Generators will have to be
             # implemented to fix this.
             # https://hackernoon.com/threaded-asynchronous-magic-and-how-to-wield-it-bba9ed602c32
-
 
         else:
             if isinstance(i1.eval(), Future):
@@ -167,7 +169,7 @@ class KelebekNode(Node):
                 return self.fut
 
     def eval(self):
-        print(Fore.YELLOW, '--> Eval Caller Name:', inspect.stack()[1][3])
+        print(Fore.YELLOW, '--> Eval Caller Name:', inspect.stack()[1][3], ', Node Name:', self)
         if not self.isDirty() and not self.isInvalid():
             if DEBUG:
                 print(Fore.MAGENTA, " _> returning cached %s value:" % self.__class__.__name__, self.value, flush=True)
