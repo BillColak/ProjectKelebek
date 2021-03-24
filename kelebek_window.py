@@ -9,6 +9,7 @@ from nodeeditor.utils import loadStylesheets
 from nodeeditor.node_editor_window import NodeEditorWindow
 from kelebek_sub_window import KelebekSubWindow
 from kelebek_drag_listbox import QDMDragListbox
+from kelebek_treeview import KelebekTreeView
 from kelebek_conf import *
 
 from nodeeditor.utils import dumpException, pp
@@ -20,11 +21,13 @@ Edge.registerEdgeValidator(edge_validator_debug)
 Edge.registerEdgeValidator(edge_cannot_connect_two_outputs_or_two_inputs)
 Edge.registerEdgeValidator(edge_cannot_connect_input_and_output_of_same_node)
 
-
 # images for the dark skin
 import qss.nodeeditor_dark_resources
 
 DEBUG = False
+
+# TODO Chat
+# TODO Integrated Dashboard, maybe can integrate qt with local host server to utilise JS/Django shit.
 
 
 class KelebekWindow(NodeEditorWindow):
@@ -35,6 +38,7 @@ class KelebekWindow(NodeEditorWindow):
 
         self.stylesheet_filename = os.path.join(os.path.dirname(__file__), "qss/nodeeditor.qss")
         loadStylesheets(
+            os.path.join(os.path.dirname(__file__), "qss/treeview.qss"),
             os.path.join(os.path.dirname(__file__), "qss/nodeeditor-dark.qss"),
             self.stylesheet_filename
         )
@@ -44,20 +48,6 @@ class KelebekWindow(NodeEditorWindow):
         if DEBUG:
             print("Registered nodes:")
             pp(KELEBEK_NODES)
-
-        # self.mdiArea = QMdiArea()
-        # self.mdiArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        # self.mdiArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        # self.mdiArea.setViewMode(QMdiArea.TabbedView)
-        # self.mdiArea.setDocumentMode(True)
-        # self.mdiArea.setTabsClosable(True)
-        # self.mdiArea.setTabsMovable(True)
-
-        # self.stacklay.addWidget(self.mdiArea)
-
-        # self.mdiArea.subWindowActivated.connect(self.updateMenus)
-        # self.windowMapper = QSignalMapper(self)
-        # self.windowMapper.mapped[QWidget].connect(self.setActiveSubWindow)
 
         self.initMDIArea()
         self.stackedWidget()
@@ -72,6 +62,7 @@ class KelebekWindow(NodeEditorWindow):
         self.readSettings()
 
         self.setWindowTitle("Kelebek NodeEditor")
+        self.palette().setBrush(QPalette.Highlight, QBrush(Qt.transparent))
 
     def initMDIArea(self):
 
@@ -87,13 +78,47 @@ class KelebekWindow(NodeEditorWindow):
         self.windowMapper = QSignalMapper(self)
         self.windowMapper.mapped[QWidget].connect(self.setActiveSubWindow)
 
-        self.nodesListWidget = QDMDragListbox()
+        # self.nodesListWidget = QDMDragListbox()
+        self.nodesTreeView = KelebekTreeView()
+        self.nodesTreeView.doubleClicked.connect(self.tag_double_clicked)
+
+        self.ui_search = QLineEdit()
+        self.ui_search.setPlaceholderText('Search...')
+        self.ui_search.textChanged.connect(self.search_text_changed)
+        self.ui_search.setFont(QFont('Seqoe UI Symbol'))
+
+        # self.completer_model = QStandardItemModel()
+        # completer = QCompleter(self.nodesListWidget.model(), self)
+        # self.ui_search.setCompleter(completer)
 
         self.nodesDock = QDockWidget("Nodes")
-        self.nodesDock.setWidget(self.nodesListWidget)
-        self.nodesDock.setFloating(False)
+        self.nodesDock.palette().setBrush(QPalette.Highlight, QBrush(Qt.transparent))
 
+        treeArea = QWidget()
+        docklayout = QVBoxLayout()
+        treeArea.setLayout(docklayout)
+        docklayout.addWidget(self.ui_search)
+        docklayout.addWidget(self.nodesTreeView)
+        self.nodesDock.setWidget(treeArea)
+
+        self.nodesDock.setFloating(False)
         self.addDockWidget(Qt.RightDockWidgetArea, self.nodesDock)
+
+    def search_text_changed(self, text=None):
+        self.nodesTreeView.tags_model.setFilterRegExp(self.ui_search.text())
+
+        if len(self.ui_search.text()) >= 1 and self.nodesTreeView.tags_model.rowCount() > 0:
+            self.nodesTreeView.expandAll()
+        else:
+            self.nodesTreeView.expandAll()
+
+    def tag_double_clicked(self, idx):
+        text = []
+        while idx.isValid():
+            text.append(idx.data(Qt.DisplayRole))
+            idx = idx.parent()
+        text.reverse()
+        self.nodesTreeView.clickedTag.emit(text)
 
     def stackedWidget(self):
         central_widget = QWidget()
@@ -128,9 +153,10 @@ class KelebekWindow(NodeEditorWindow):
 
         self.play_btn = QAction(QIcon('images/play-hot.png'), 'Button', self)
         navtb.addAction(self.play_btn)
-        self.play_btn.triggered.connect(self.print_editor_widget)
+        # self.play_btn.triggered.connect(self.print_editor_widget)
 
     def print_editor_widget(self):
+        # this was used to test adding nodes from webbrowser by the context manager.
         active = self.getCurrentNodeEditorWidget()
         print('Active:', active)
         print('mdiArea:', self.mdiArea.subWindowList())
@@ -244,7 +270,7 @@ class KelebekWindow(NodeEditorWindow):
 
         if active is not None:
             self.browser.scene = active.scene
-            print('browser scene:', self.browser.scene)
+            # print('browser scene:', self.browser.scene)
 
         hasMdiChild = (active is not None)
 
@@ -285,6 +311,8 @@ class KelebekWindow(NodeEditorWindow):
         toolbar_nodes.setChecked(self.nodesDock.isVisible())
 
         self.windowMenu.addSeparator()
+        # self.windowMenu.addMenu()
+        # self.windowMenu.addSection()
 
         self.windowMenu.addAction(self.actClose)
         self.windowMenu.addAction(self.actCloseAll)
@@ -318,14 +346,14 @@ class KelebekWindow(NodeEditorWindow):
         else:
             self.nodesDock.show()
 
-    def createNodesDock(self):
-        self.nodesListWidget = QDMDragListbox()
-
-        self.nodesDock = QDockWidget("Nodes")
-        self.nodesDock.setWidget(self.nodesListWidget)
-        self.nodesDock.setFloating(False)
-
-        self.addDockWidget(Qt.RightDockWidgetArea, self.nodesDock)
+    # def createNodesDock(self):
+    #     self.nodesListWidget = QDMDragListbox()
+    #
+    #     self.nodesDock = QDockWidget("Nodes")
+    #     self.nodesDock.setWidget(self.nodesListWidget)
+    #     self.nodesDock.setFloating(False)
+    #
+    #     self.addDockWidget(Qt.RightDockWidgetArea, self.nodesDock)
 
     def createStatusBar(self):
         self.statusBar().showMessage("Ready")

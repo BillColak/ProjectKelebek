@@ -29,7 +29,7 @@ class KelebekStoreContent(QDMNodeContentWidget):
         return res
 
 
-@register_node(OP_NODE_STORE)
+@register_node2(OP_NODE_STORE, 'Output')
 class KelebekNodeStore(KelebekNode):
     # icon = "icons/out.png"
     op_code = OP_NODE_STORE

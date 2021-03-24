@@ -12,9 +12,9 @@ QDMNodeContentWidget QLineEdit {
 QDMNodeContentWidget QLabel {
   color: #e0e0e0;
 }
-QDMNodeContentWidget QLabel#calc_node_bg,
-QDMNodeContentWidget QLabel#calc_node_mul,
-QDMNodeContentWidget QLabel#calc_node_div {
+QDMNodeContentWidget QLabel#Kelebek_node_test,
+QDMNodeContentWidget QLabel#Kelebek_node_test,
+QDMNodeContentWidget QLabel#Kelebek_node_test {
   background: transparent;
   height: 0px;
   color: #373737;
@@ -23,11 +23,11 @@ QDMNodeContentWidget QLabel#calc_node_div {
   min-height: 49px;
   padding-left: 94px;
 }
-QDMNodeContentWidget QLabel#calc_node_mul,
-QDMNodeContentWidget QLabel#calc_node_div {
+QDMNodeContentWidget QLabel#Kelebek_node_test,
+QDMNodeContentWidget QLabel#Kelebek_node_test {
   padding-top: 12px;
 }
-QDMNodeContentWidget QLabel#calc_node_output {
+QDMNodeContentWidget QLabel#Kelebek_node_test {
   min-width: 150px;
   max-width: 150px;
   min-height: 45px;
@@ -36,7 +36,7 @@ QDMNodeContentWidget QLabel#calc_node_output {
   margin-top: 5px;
   font-size: 28px;
 }
-QDMNodeContentWidget QLineEdit#calc_node_input {
+QDMNodeContentWidget QLineEdit#Kelebek_node_test {
   width: 140px;
   height: 36px;
   margin-top: 5px;

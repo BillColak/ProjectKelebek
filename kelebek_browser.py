@@ -2,8 +2,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets, QtWebChannel
 from jinja2 import Template
 import os
 
-from functools import partial
-from kelebek_sub_window import KelebekSubWindow
 from kelebek_conf import *
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -11,10 +9,10 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 # HOME = 'https://www.google.com/'
 HOME = "https://books.toscrape.com/"
 
-DEBUG_CONTEXT = True
 
-
-# TODO custom contextmenu that adds node to the editor.
+# TODO custom menu does not pop up when user interacts with browser before editor widget. Need to update browser,
+#  on the existence of a scene, also this might mean the browsers also has no communication if a scene is closed
+#  leading to an error.
 
 
 class Element(QtCore.QObject):
@@ -255,6 +253,28 @@ class QuteBrowser(QtWebEngineWidgets.QWebEngineView):
         for key in keys: context_menu.addAction(self.node_actions[key])
         return context_menu
 
+    # def initNodesContextMenu(self):
+    #     context_menu = QtWidgets.QMenu(self)
+    #     self.createContextMenu(context_menu, KELEBEK_NODES2)
+    #     # keys = list(KELEBEK_NODES.keys())
+    #     # keys.sort()
+    #     # for key in keys: context_menu.addAction(self.node_actions[key])
+    #     return context_menu
+
+    def createContextMenu(self, parent, values):  # tODO make sure only web related nodes are allowed in the browser
+        if isinstance(values, dict):
+            for key, value in values.items():
+                # NODES:
+                if isinstance(key, int):
+                    node = value
+                    action = QtWidgets.QAction(QtGui.QIcon(node.icon), node.op_title)
+                    action.setData(node.op_code)
+                    parent.addAction(action)
+                else:
+                    menu = QtWidgets.QMenu(key)
+                    parent.addMenu(menu)
+                    self.createContextMenu(menu, value)
+
     def handleNewNodeContextMenu(self, event):
         import random
         context_menu = self.initNodesContextMenu()
@@ -266,48 +286,20 @@ class QuteBrowser(QtWebEngineWidgets.QWebEngineView):
             if self.scene is not None:
                 new_kelebek_node = get_class_from_opcode(action.data())(self.scene)
                 new_kelebek_node.setPos(x, y)
-                # print('Node Value: ', self.value)
-
                 try:
                     print('Node Value: ', self.value)
                     text = new_kelebek_node.xpath_operation(**self.value)
                     new_kelebek_node.content.edit.setText(text)
-
                 except Exception as e:
                     print('Error inserting text.', e)
-                else:
-                    pass
-
                 self.scene.history.storeHistory("Created %s" % new_kelebek_node.__class__.__name__)
             else:
                 print('SCENE IS NONE')
 
     def contextMenuEvent(self, event):
+        # If there is not scene opened do not allow for context menu.
         if self.scene:
             self.handleNewNodeContextMenu(event)
         # else:
         #     super().contextMenuEvent(event)
-
-    # def addMyItem(self, name, icon=None, op_code=0):
-    #     pixmap = QtGui.QPixmap(icon if icon is not None else ".")
-    #
-    #     item = QtWidgets.QAction(QtGui.QIcon(pixmap), name, self)
-    #     item.triggered.connect(partial(self.addNodeAction, name))
-    #     item.setData(op_code)
-    #     self.menu.addAction(item)
-    #
-    # def contextMenuEvent(self, event):
-    #     # try:
-    #     self.menu = QtWidgets.QMenu(self)
-    #     keys = list(KELEBEK_NODES.keys())
-    #     keys.sort()
-    #     for key in keys:
-    #         node = get_class_from_opcode(key)
-    #         self.addMyItem(node.op_title, node.icon, node.op_code)
-    #     self.menu.exec_(self.mapToGlobal(event.pos()))
-    #     # except:
-    #     #     print('Error at ContextMenu Event')
-    #
-    # def addNodeAction(self, node):
-    #     print(f'Added: {node}')
 

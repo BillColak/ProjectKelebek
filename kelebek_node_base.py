@@ -14,6 +14,9 @@ from concurrent.futures import Future
 from kelebek_multithreading import run_simple_thread
 DEBUG = False
 
+# TODO object design template/ standard where all objects have same curvature and etc.. by default like bootstrap/
+#  Google Material Design, Widget Animations --> this wil give some legit credibility.
+
 
 class KelebekGraphicsNode(QDMGraphicsNode):
     def initSizes(self):
@@ -83,7 +86,8 @@ class KelebekNode(Node):
         self.markDirty()
         # TODO Future exceptions.
         # TODO if xpath is not valid. User should click eval after confirming.->remove the marking shit from contextmenu
-        # TODO revamp eval as it is not providing useful tooltips.
+        # TODO Node tooltips.
+
 
     def initInnerClasses(self):
         self.content = KelebekContent(self)
@@ -103,9 +107,14 @@ class KelebekNode(Node):
         self.value = thread_result
         print("THREAD FINISHED: ")
         self.eval()
-        get_all_outputs = self.getOutputs()
-        for node in get_all_outputs:
-            node.eval()
+        try:
+            get_all_outputs = self.getOutputs()
+            for node in get_all_outputs:
+                node.eval()
+        except Exception as e:
+            print('Edge is not connected to any Nodes.', e)
+        else:
+            print(Fore.BLUE, "This node does not have any outputs. OR something else happened", self.__class__.__name__)
 
     def evalOperation(self, input1, input2):
         return 123

@@ -251,11 +251,6 @@ class Dialog(QDialog):
         print('OUTPUT: ', s)
         return s
 
-    # def callmemaybe(self, pc):
-    #     for x in range(20, 101, 10):
-    #         time.sleep(0.5)
-    #         pc.emit(x)
-
     # this is a slot, can it also be a signal
     def update_progbar1(self, progress_callback):
         for x in range(20, 101, 10):
@@ -267,27 +262,6 @@ class Dialog(QDialog):
         for x in range(20, 101, 10):
             time.sleep(0.5)
             progress_callback2.emit(x)
-
-        # self.progressbar2.setValue()
-
-            # self.value_output.append(x)
-        # return self.value_output
-
-    # def execute_this_fn(self, page, progress_callback):
-    #     # is called. Which means self.progress_fn = progress_callback
-    #     """Do some process here"""
-    #     resp = requests.get(page)
-    #     # 'http://books.toscrape.com/'
-    #     total = 50
-    #     for i in range(0, total):
-    #         time.sleep(.2)
-    #         x = random.randint(1, 1000)
-    #         progress_callback.emit(x)
-    #         if self.stopped:
-    #             return
-    #     return resp.content
-        # return 'The function has finished executing'  # or emit the completed.
-
 
 if __name__ == '__main__':
 

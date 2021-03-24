@@ -7,8 +7,8 @@ from nodeeditor.node_edge import EDGE_TYPE_DIRECT, EDGE_TYPE_BEZIER
 from nodeeditor.node_graphics_view import MODE_EDGE_DRAG#, MODE_EDGES_REROUTING
 from nodeeditor.utils import dumpException
 
-DEBUG = True
-DEBUG_CONTEXT = True
+DEBUG = False
+DEBUG_CONTEXT = False
 
 
 class KelebekSubWindow(NodeEditorWidget):

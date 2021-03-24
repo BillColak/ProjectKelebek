@@ -5,7 +5,7 @@ from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 
 from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, refactor_path_pagination_xpath,\
-    refactor_path_single_link, refactor_path_multi_link, refactor_path_single_item, refactor_path_multi_item
+    refactor_path_single_link, refactor_path_multi_link, refactor_path_single_item, refactor_path_multi_item, single_link
 
 import os
 from colorama import Fore
@@ -16,6 +16,9 @@ from concurrent.futures import Future
 
 DEBUG = True
 
+# TODO can make it so it is not possible for non-connection(nodes that return string) to be the input of connection
+#  nodes. When a thread is running and an edge is being moved around without a connection.
+#  the node thinks it has a connection there for ask for outputs when there is none.
 
 # page_url = 'http://books.toscrape.com/'
 # pagination_path = '//a[text()="next"]/@href'
@@ -27,9 +30,9 @@ star_rating = "//*[contains(@class, 'star-rating')]/@class"
 product_description = "//*[@id='product_description']/following-sibling::p/text()"
 
 
-@register_node(OP_NODE_PAGINATION)
+@register_node2(OP_NODE_PAGINATION, 'Web Navigation')
 class KelebekNodePagination(KelebekNode):
-    # icon = "icons/add.png"
+    icon = "icons/add.png"
     op_code = OP_NODE_PAGINATION
     op_title = "Pagination"
     content_label = ""
@@ -37,14 +40,6 @@ class KelebekNodePagination(KelebekNode):
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[2], outputs=[1])
-
-    #     self.fut = Future()
-    #
-    # def finished(self, result):
-    #     self.running_thread = True
-    #     self.fut.set_result(result)
-    #     # need to communicate that the operating has completed to descendants
-    #     print("THREAD FINISHED: ", result)
 
     def xpath_operation(self, **kwargs) -> str:
         text_value = kwargs.get('text')
@@ -63,14 +58,14 @@ class KelebekNodePagination(KelebekNode):
         return output
 
     def evalOperation(self, input1_page, value1_pagination_path: str):
+        if isinstance(input1_page, Future):
+            input1_page = input1_page.result()
+            print('input is a future')
         x = self.pagination(input1_page, value1_pagination_path)
         return x
-        # should have this like what it was previously.
-        # run_simple_thread(self.pagination, self.finished, input1_page, value1_pagination_path)
-        # return self.fut
 
 
-@register_node(OP_NODE_HOP_ALL_LINKS)
+@register_node2(OP_NODE_HOP_ALL_LINKS, 'Web Navigation')
 class KelebekNodeHopAllLinks(KelebekNode):
     # icon = "icons/divide.png"
     op_code = OP_NODE_HOP_ALL_LINKS
@@ -84,30 +79,18 @@ class KelebekNodeHopAllLinks(KelebekNode):
         return refactor_path_multi_link(path, attributes)
 
     def evalOperation(self, gen, path):
-        #  if input if is future --> wait_for, wrap_future
         if isinstance(gen, Future):
             gen = gen.result()
 
-        # This does not work with qt threads
-        # loop = asyncio.get_event_loop()
-        # x = loop.run_until_complete(multi_link(loop, gen, path))
-
-        # call_soon(), call_later() or call_at()  --> these are not thread safe
-        # run_coroutine_threadsafe -- for async coros only
-        # call_soon_threadsafe --> for non async functions
-        # asyncio.get_running_loop()
-
-        # This works with qt threads but freezes sometimes. see note in the node_base.
         new_loop = asyncio.new_event_loop()
-        x = new_loop.run_until_complete(multi_link(new_loop, gen, path))
+        x = new_loop.run_until_complete(multi_link(new_loop, gen, path))  # todo make sure this never call the same
+        # coroutine twice? check the docs.
 
-        # does the event loop close itself?
-        # also this shit is using massive amounts of memory
         self.running_thread = True
         return x
 
 
-@register_node(OP_NODE_HOP_LINK)
+@register_node2(OP_NODE_HOP_LINK, 'Web Navigation')
 class KelebekNodeHopLink(KelebekNode):
     # icon = "icons/sub.png"
     op_code = OP_NODE_HOP_LINK
@@ -120,12 +103,22 @@ class KelebekNodeHopLink(KelebekNode):
         attributes = kwargs.get('attributes')
         return refactor_path_single_link(path, attributes)
 
-
     def evalOperation(self, input1, value1):
-        print("NOT IMPLEMENTED")
+        if isinstance(input1, Future):
+            input1 = input1.result()
+            print('input is a future')
+
+        items = []
+        for i in input1:
+            item = get_item(i, value1)
+            link = single_link(item)
+            print(Fore.BLUE, 'LINK: ', link.url)
+            items.append(link)
+        self.running_thread = True
+        return items
 
 
-@register_node(OP_NODE_SINGLE_ITEM)
+@register_node2(OP_NODE_SINGLE_ITEM, 'Item Extraction')
 class KelebekNodeSingleItem(KelebekNode):
     # icon = "icons/sub.png"
     op_code = OP_NODE_SINGLE_ITEM
@@ -139,6 +132,10 @@ class KelebekNodeSingleItem(KelebekNode):
         return refactor_path_single_item(path, attributes)
 
     def evalOperation(self, input1, value1):
+        if isinstance(input1, Future):
+            input1 = input1.result()
+            print('input is a future')
+
         items = []
         for i in input1:
             item = get_item(i, value1)
@@ -148,7 +145,7 @@ class KelebekNodeSingleItem(KelebekNode):
         return items
 
 
-@register_node(OP_NODE_MULTI_ITEM)
+@register_node2(OP_NODE_MULTI_ITEM, 'Item Extraction')
 class KelebekNodeMultiItem(KelebekNode):
     # icon = "icons/sub.png"
     op_code = OP_NODE_MULTI_ITEM
@@ -175,23 +172,8 @@ class KelebekNodeMultiItem(KelebekNode):
     def evalOperation(self, input1, value1):
         return self.get_all_items(input1, value1)
 
-        # output=[]
-        # for i in input1:
-        #     print(type(i))
-        #     output.append(get_all(i, value1))
-        # return output
 
-        # This for iterating through TEST NODE one by one
-        # for i in input1:
-        #     items = get_all(i, value1)
-        #     yield items
-
-        # for i in input1:
-        #     print(type(i))
-        #     yield from get_all(i, value1)
-
-
-@register_node(OP_NODE_DISPLAY_OUTPUT)
+@register_node2(OP_NODE_DISPLAY_OUTPUT, 'Web Navigation')
 class KelebekNodeDisplayOutput(KelebekNode):
     # icon = "icons/sub.png"
     op_code = OP_NODE_DISPLAY_OUTPUT
@@ -249,7 +231,7 @@ class KelebekNodeDisplayOutput(KelebekNode):
             return val
 
 
-@register_node(OP_NODE_TEST)
+@register_node2(OP_NODE_TEST, 'Finance.Financials')
 class KelebekTestNode(KelebekNode):
     icon = "icons/sub.png"
     op_code = OP_NODE_TEST
@@ -271,14 +253,6 @@ class KelebekTestNode(KelebekNode):
         self.content = KelebekTestNodeContent(self)
         self.grNode = KelebekGraphicsNode(self)
         self.content.run_nodes.clicked.connect(self.clk_btn)
-
-    # def flatten(self, curr_item, output):
-    #     import types
-    #     if isinstance(curr_item, types.GeneratorType):
-    #         for item in curr_item:
-    #             self.flatten(item, output)
-    #     else:
-    #         output.append(curr_item)
 
     def clk_btn(self):
         all_inputs_nodes = self.getInputs()

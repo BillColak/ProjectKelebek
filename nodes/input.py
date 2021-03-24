@@ -11,7 +11,7 @@ import requests
 # from kelebek_multithreading import run_threaded_process, DEFAULT_STYLE, COMPLETED_STYLE
 
 
-@register_node(OP_NODE_INPUT)
+@register_node2(OP_NODE_INPUT, 'Web Navigation')
 class KelebekNodeInput(KelebekNode):
     # icon = "icons/in.png"
     op_code = OP_NODE_INPUT
@@ -28,7 +28,7 @@ class KelebekNodeInput(KelebekNode):
         resp = requests.get(page)
         if resp.ok:
             print("RESP OK! ")
-            return page
+            return resp
 
     def initInnerClasses(self):
         self.content = KelebekInputContent(self)

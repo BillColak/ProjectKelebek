@@ -8,23 +8,11 @@ from urllib.parse import urljoin
 from colorama import Fore
 import re
 
+# THE CODE HERE MAKES UP THE BACK END OF THE NODES.
 # TODO the functions in this file need a make over and optimization.
-
-
-def coroutine(fn):
-    def inner(*args, **kwargs):
-        g = fn(*args, **kwargs)
-        next(g)
-        return g
-    return inner
-
-
-@coroutine
-def broadcast(targets):
-    while True:
-        data_row = yield
-        for target in targets:
-            target.send(data_row)
+# TODO need to implement error handling, proxy requests, and security measures.
+# TODO GENERATOR VERSION OF SCRAPER FOR ONE BY ONE ANALYSIS.
+# improve the robustness of the functions
 
 
 def xpath_root(page_source: str or bytes, base_url=None, parser=None) -> lxml_html.HtmlElement:
@@ -40,7 +28,7 @@ def get_first(list_elements):
 
 def get_item(resp: str or bytes, path, attributes: dict = None) -> str:
     """This gets the first item"""
-    path = refactor_path_single_item(path, attributes)
+    # path = refactor_path_single_item(path, attributes)
     if isinstance(resp, requests.models.Response):
         return get_first(xpath_root(resp.content).xpath(path))
     else:
@@ -68,13 +56,17 @@ def get_all(resp: str or bytes, path) -> list:
 async def multi_link(loop: AbstractEventLoop, gen, path: str):
     asyncio.set_event_loop(loop)  # TODO double check is this is the right thing to do with new_event_loops
     tasks = []
+
     # currently dont have to to this because nothing gets passed over until threads are done.
     # if isinstance(gen, ConcurrentFuture):
     #     gen = await wait_for(wrap_future(gen), None)
 
     async with ClientSession(loop=loop) as session:
+        # if isinstance(gen, str):
+        #     gen_text = await session.get(gen)
+        #     gen = gen_text.content
+
         for i, j in enumerate(gen):
-            # print(Fore.MAGENTA, f'Page-{i + 1}: ', j.url, flush=True)
             urls = [urljoin(j.url, link) for link in xpath_root(j.content).xpath(path)]
             for url in urls:
                 tasks.append(loop.create_task(fetch(session, url)))
@@ -95,7 +87,14 @@ async def fetch(session: ClientSession, url):
 
 
 def paginator(session: Session, url: str, path: str, output: list):
-    resp = session.get(url)
+    if isinstance(url, str):
+        resp = session.get(url)
+    elif isinstance(url, requests.models.Response):
+        resp = url
+        url = resp.url
+    else:
+        raise ValueError('Provided url is neither a string or a response.', url)
+    # resp = session.get(url)
     link = get_item(resp.content, path)
     output.append(resp)
     # link = next(link)  # turned getItem into gen for singleItem node
@@ -105,6 +104,10 @@ def paginator(session: Session, url: str, path: str, output: list):
         absolute_url = urljoin(url, link)
         print(Fore.GREEN, 'LINK:', absolute_url)
         yield from paginator(session, absolute_url, path, output)
+
+
+def single_link(link: str) -> requests.models.Response:
+    return requests.get(link)
 
 
 def get_numbers(value) -> float:
