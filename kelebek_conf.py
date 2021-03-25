@@ -82,4 +82,6 @@ def deep_get(dictionary, keys, default=None):
 
 
 # import all nodes and register them
-from nodes import *
+from nodes.input import *
+from nodes.operations import *
+from nodes.output import *
