@@ -1,0 +1,72 @@
+
+
+KelebekTreeView{
+    margin-left: 5px;
+}
+
+QTreeView {
+    selection-background-color: transparent;
+    border: transparent;
+}
+
+QTreeView::item {
+    border: 2px solid #d9d9d9;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    border-width:5px;
+    border-radius: 12px;
+    margin-top: 10px;
+    background: #6EC850;  /* This gives the items green background color*/
+}
+
+
+QTreeView::item:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e7effd, stop: 1 #cbdaf1);
+    border: 1px solid #bfcde4;
+}
+
+QTreeView::item:selected:active{
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6ea1f1, stop: 1 #567dbc);
+}
+
+QTreeView::item:selected:!active {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #6b9be8, stop: 1 #577fbf);
+}
+
+/* THIS RIGHT HERE IS THE MONEY*/
+QTreeView::branch  {
+    background: transparent;
+}
+
+QTreeView::branch:has-siblings:!adjoins-item {
+    background: transparent;
+    border-image: url(images/vline.png) 0;
+}
+
+QTreeView::branch:has-siblings:adjoins-item {
+    background: transparent;
+    border-image: url(images/branch-more.png) 0;
+}
+
+QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+    background: transparent;
+    border-image: url(images/branch-end.png) 0;
+}
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+        background: transparent;
+        border-image: none;
+        image: url(images/branch_closed_darker.png);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings  {
+        background: transparent;
+        border-image: none;
+        image: url(images/branch_open_darker.png);
+}
+
+

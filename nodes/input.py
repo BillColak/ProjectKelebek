@@ -2,7 +2,7 @@
 from PyQt5.QtCore import *
 from kelebek_conf import *
 from kelebek_node_base import *
-from nodeeditor.utils import dumpException
+# from nodeeditor.utils import dumpException
 
 # import time
 import requests

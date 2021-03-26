@@ -1,6 +1,8 @@
-from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets, QtWebChannel
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
+from PyQt5.QtWebChannel import QWebChannel
 from jinja2 import Template
-import os
+# import os
 
 from kelebek_conf import *
 
@@ -28,7 +30,7 @@ class Element(QtCore.QObject):
         return ""
 
 
-class WebEnginePage(QtWebEngineWidgets.QWebEnginePage):
+class WebEnginePage(QWebEnginePage):
     def __init__(self, parent=None):
         super(WebEnginePage, self).__init__(parent)
         self.loadFinished.connect(self.onLoadFinished)
@@ -53,7 +55,7 @@ class WebEnginePage(QtWebEngineWidgets.QWebEnginePage):
             file.close()
             self.runJavaScript(content.data().decode())
         if self.webChannel() is None:
-            channel = QtWebChannel.QWebChannel(self)
+            channel = QWebChannel(self)
             self.setWebChannel(channel)
 
     def add_objects(self):
@@ -227,7 +229,7 @@ class QtBrowserWidget(QtWidgets.QWidget):
             """)
 
 
-class QuteBrowser(QtWebEngineWidgets.QWebEngineView):
+class QuteBrowser(QWebEngineView):
     def __init__(self, *args, **kwargs):
         super(QuteBrowser, self).__init__(*args, **kwargs)
         self.value = None

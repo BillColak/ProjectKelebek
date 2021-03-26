@@ -1,4 +1,4 @@
-import os
+# import os
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -8,7 +8,7 @@ from kelebek_browser import QtBrowserWidget, QuteBrowser
 from nodeeditor.utils import loadStylesheets
 from nodeeditor.node_editor_window import NodeEditorWindow
 from kelebek_sub_window import KelebekSubWindow
-from kelebek_drag_listbox import QDMDragListbox
+# from kelebek_drag_listbox import QDMDragListbox
 from kelebek_treeview import KelebekTreeView
 from kelebek_conf import *
 
@@ -33,7 +33,7 @@ DEBUG = False
 class KelebekWindow(NodeEditorWindow):
 
     def initUI(self):
-        self.name_company = 'Blenderfreak'
+        self.name_company = 'GucciGang'
         self.name_product = 'Kelebek NodeEditor'
 
         self.stylesheet_filename = os.path.join(os.path.dirname(__file__), "qss/nodeeditor.qss")
@@ -44,6 +44,8 @@ class KelebekWindow(NodeEditorWindow):
         )
 
         self.empty_icon = QIcon(".")
+        app_icon = QIcon(os.path.join(os.path.dirname(__file__), "icons/purple-cube.ico"))
+        self.setWindowIcon(app_icon)
 
         if DEBUG:
             print("Registered nodes:")
@@ -125,7 +127,6 @@ class KelebekWindow(NodeEditorWindow):
         self.stackedlay = QStackedLayout(central_widget)
         self.browser = QuteBrowser()
         self.kelebek_browser = QtBrowserWidget(self.browser)
-        # self.kelebek_browser = QtBrowserWidget()
         self.stackedlay.addWidget(self.kelebek_browser)
         self.stackedlay.addWidget(self.mdiArea)
 

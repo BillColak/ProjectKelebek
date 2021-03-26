@@ -2,7 +2,7 @@
 from PyQt5.QtCore import *
 from kelebek_conf import *
 from kelebek_node_base import *
-from nodeeditor.utils import dumpException
+# from nodeeditor.utils import dumpException
 
 from spider.kelebek_node_functions import get_item, get_all, multi_link, paginator, refactor_path_pagination_xpath,\
     refactor_path_single_link, refactor_path_multi_link, refactor_path_single_item, refactor_path_multi_item, single_link

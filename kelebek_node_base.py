@@ -16,6 +16,7 @@ DEBUG = False
 
 # TODO object design template/ standard where all objects have same curvature and etc.. by default like bootstrap/
 #  Google Material Design, Widget Animations --> this wil give some legit credibility.
+# TODO only allow socket connections of allowed type".
 
 
 class KelebekGraphicsNode(QDMGraphicsNode):
@@ -92,7 +93,7 @@ class KelebekNode(Node):
     def initInnerClasses(self):
         self.content = KelebekContent(self)
         self.grNode = KelebekGraphicsNode(self)
-        # self.content.edit.textChanged.connect(self.onInputChanged)
+        # self.content.edit.textChanged.connect(self.onInputChanged)  # TODO need this shit in the production code.
 
     def initSettings(self):
         super().initSettings()
