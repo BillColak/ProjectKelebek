@@ -6,3 +6,4 @@ lxml==4.6.3
 colorama==0.4.4
 PyQt5==5.15.0
 PyQtWebEngine==5.15.0
+PyQtChart==5.15.0

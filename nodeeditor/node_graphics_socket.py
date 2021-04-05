@@ -33,6 +33,13 @@ class QDMGraphicsSocket(QGraphicsItem):
         self.outline_width = 1.0
         self.initAssets()
 
+    #     if self.socket.node.grNode.__class__.__name__ == 'FactoryGraphicsNode':
+    #         self.socket.node.grNode.size_changed.connect(self.fatty)
+    #
+    # def fatty(self, s: QRect):
+    #     print(s, self.pos())
+    #     self.setPos(s.width(), s.height()/2)
+
     @property
     def socket_type(self):
         return self.socket.socket_type

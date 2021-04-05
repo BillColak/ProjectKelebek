@@ -22,7 +22,7 @@ Loco = {'Canada': {
 class SearchProxyModel(QSortFilterProxyModel):
 
     # https://stackoverflow.com/questions/47746180/single-column-qtreeview-search-filter
-    # TODO show descendant of row when searched
+    # TODO show descendant of row when parent is searched
 
     def __init__(self, parent=None):
         super(SearchProxyModel, self).__init__(parent)
@@ -61,15 +61,11 @@ class KelebekTreeView(QTreeView):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # treeModel = QStandardItemModel()
-
         self.tags_model = SearchProxyModel()
         self.tags_model.setSourceModel(QStandardItemModel())
         self.tags_model.setDynamicSortFilter(True)
 
         self.setModel(self.tags_model)
-
-        # model = self.ui_tags.model().sourceModel()
         model = self.tags_model.sourceModel()
         self.rootNode = model.invisibleRootItem()
 
@@ -103,7 +99,6 @@ class KelebekTreeView(QTreeView):
                     self.addMyItem(parent, node.op_title, node.icon, node.op_code)
                 else:
                     item = QStandardItem(key)
-                    item.setBackground(QColor('#54BDD9'))
                     item.setToolTip('This is a treeview item tooltip1')
                     item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                     parent.appendRow(item)
@@ -114,8 +109,6 @@ class KelebekTreeView(QTreeView):
         item.setToolTip('This is a treeview item tooltip2')
         pixmap = QPixmap(icon if icon is not None else ".")
         item.setIcon(QIcon(pixmap))
-        # item.setSizeHint(QSize(32, 32))
-
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
 
         # setup data
@@ -125,7 +118,6 @@ class KelebekTreeView(QTreeView):
 
     def startDrag(self, *args, **kwargs):
         try:
-            # item = self.currentItem()
             item = self.selectedIndexes()[0]
             op_code = item.data(Qt.UserRole + 1)
 

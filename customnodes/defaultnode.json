@@ -1,0 +1,33 @@
+{
+  "nodes": [
+        {
+            "id": 187743416,
+            "title": "Pagination",
+            "pos_x": -650.0,
+            "pos_y": -308.0,
+            "inputs": [
+                {
+                    "id": 187743320,
+                    "index": 0,
+                    "multi_edges": false,
+                    "position": 2,
+                    "socket_type": 2
+                }
+            ],
+            "outputs": [
+                {
+                    "id": 187743968,
+                    "index": 0,
+                    "multi_edges": true,
+                    "position": 5,
+                    "socket_type": 1
+                }
+            ],
+            "content": {
+                "value": "//li/a[normalize-space(text())=\"next\"]/@href"
+            },
+            "op_code": 6,
+            "operation": "etc....."
+        }
+  ]
+}

@@ -24,6 +24,7 @@ KELEBEK_NODES2 = {'Web Navigation': {},
                       'Financials': {}
                   },
                   'Output': {},
+                  'Factory Nodes': {},
                   }
 
 

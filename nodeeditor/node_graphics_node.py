@@ -56,6 +56,7 @@ class QDMGraphicsNode(QGraphicsItem):
         """Set up this ``QGraphicsItem``"""
         self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
 
         # init title
@@ -66,8 +67,8 @@ class QDMGraphicsNode(QGraphicsItem):
 
     def initSizes(self):
         """Set up internal attributes like `width`, `height`, etc."""
-        self.width = 180
-        self.height = 240
+        self.width = 240
+        self.height = 180
         self.edge_roundness = 10.0
         self.edge_padding = 10.0
         self.title_height = 24.0

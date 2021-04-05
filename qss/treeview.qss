@@ -18,7 +18,9 @@ QTreeView::item {
     border-width:5px;
     border-radius: 12px;
     margin-top: 10px;
-    background: #6EC850;  /* This gives the items green background color*/
+    background: #51CD47;
+    /*background: #6EC850;*/  /* This gives the items green background color*/
+    /*background: #1ED760;*/  /* Spotify green*/
 }
 
 

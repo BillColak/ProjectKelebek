@@ -14,9 +14,8 @@ from concurrent.futures import Future
 from kelebek_multithreading import run_simple_thread
 DEBUG = False
 
-# TODO object design template/ standard where all objects have same curvature and etc.. by default like bootstrap/
-#  Google Material Design, Widget Animations --> this wil give some legit credibility.
-# TODO only allow socket connections of allowed type".
+# TODO only allow socket connections of "allowed type".
+# TODO TEST recursion with generators that are deep copies. deques might help. or make an entire class.
 
 
 class KelebekGraphicsNode(QDMGraphicsNode):
@@ -89,11 +88,10 @@ class KelebekNode(Node):
         # TODO if xpath is not valid. User should click eval after confirming.->remove the marking shit from contextmenu
         # TODO Node tooltips.
 
-
     def initInnerClasses(self):
         self.content = KelebekContent(self)
         self.grNode = KelebekGraphicsNode(self)
-        # self.content.edit.textChanged.connect(self.onInputChanged)  # TODO need this shit in the production code.
+        self.content.edit.textChanged.connect(self.onInputChanged)  # TODO need this shit in the production code.
 
     def initSettings(self):
         super().initSettings()

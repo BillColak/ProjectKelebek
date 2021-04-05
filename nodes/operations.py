@@ -32,7 +32,7 @@ product_description = "//*[@id='product_description']/following-sibling::p/text(
 
 @register_node2(OP_NODE_PAGINATION, 'Web Navigation')
 class KelebekNodePagination(KelebekNode):
-    icon = "icons/add.png"
+    # icon = "icons/add.png"
     op_code = OP_NODE_PAGINATION
     op_title = "Pagination"
     content_label = ""
@@ -233,14 +233,14 @@ class KelebekNodeDisplayOutput(KelebekNode):
 
 @register_node2(OP_NODE_TEST, 'Finance.Financials')
 class KelebekTestNode(KelebekNode):
-    icon = "icons/sub.png"
+    # icon = "icons/sub.png"
     op_code = OP_NODE_TEST
     op_title = "Test Node"
     content_label = ""
     content_label_objname = "Kelebek_node_test"
 
     def __init__(self, scene):
-        super().__init__(scene, inputs=[1], outputs=[])
+        super().__init__(scene, inputs=[1, '#D406D7'], outputs=[])
 
     def initSettings(self):
         super().initSettings()

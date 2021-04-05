@@ -10,6 +10,7 @@ from nodeeditor.node_editor_window import NodeEditorWindow
 from kelebek_sub_window import KelebekSubWindow
 # from kelebek_drag_listbox import QDMDragListbox
 from kelebek_treeview import KelebekTreeView
+from kelebek_node_factory import FactoryView
 from kelebek_conf import *
 
 from nodeeditor.utils import dumpException, pp
@@ -25,9 +26,14 @@ Edge.registerEdgeValidator(edge_cannot_connect_input_and_output_of_same_node)
 import qss.nodeeditor_dark_resources
 
 DEBUG = False
-
+# TODO increase the zoom in factor
+# TODO People should be able to make their own nodes and dashboard components. Ex: in-house vs custom. connect to
+#  external .py files
 # TODO Chat
 # TODO Integrated Dashboard, maybe can integrate qt with local host server to utilise JS/Django shit.
+# TODO https://stackoverflow.com/questions/3770084/efficiently-updating-a-qtableview-at-high-speed?rq=1
+# https://dribbble.com/shots/15266170-Bitoket-cryptocurrency-UI-and-UX-Design-Darkmode/attachments/7017779?mode=media
+# https://dribbble.com/shots/7797656-Tree-View/attachments/458993?mode=media
 
 
 class KelebekWindow(NodeEditorWindow):
@@ -44,17 +50,18 @@ class KelebekWindow(NodeEditorWindow):
         )
 
         self.empty_icon = QIcon(".")
-        app_icon = QIcon(os.path.join(os.path.dirname(__file__), "icons/purple-cube.ico"))
+        # app_icon = QIcon(os.path.join(os.path.dirname(__file__), "icons/purple-cube.ico"))
+        app_icon = QIcon(os.path.join(os.path.dirname(__file__), "images/green-cube.svg"))
         self.setWindowIcon(app_icon)
 
         if DEBUG:
             print("Registered nodes:")
             pp(KELEBEK_NODES)
+        # self.setWindowFlags(Qt.FramelessWindowHint) # Todo custom window frame to complete overall style
 
         self.initMDIArea()
         self.stackedWidget()
         self.toolBar()
-        # self.createNodesDock()
 
         self.createActions()
         self.createMenus()
@@ -89,10 +96,6 @@ class KelebekWindow(NodeEditorWindow):
         self.ui_search.textChanged.connect(self.search_text_changed)
         self.ui_search.setFont(QFont('Seqoe UI Symbol'))
 
-        # self.completer_model = QStandardItemModel()
-        # completer = QCompleter(self.nodesListWidget.model(), self)
-        # self.ui_search.setCompleter(completer)
-
         self.nodesDock = QDockWidget("Nodes")
         self.nodesDock.palette().setBrush(QPalette.Highlight, QBrush(Qt.transparent))
 
@@ -125,46 +128,64 @@ class KelebekWindow(NodeEditorWindow):
     def stackedWidget(self):
         central_widget = QWidget()
         self.stackedlay = QStackedLayout(central_widget)
+
         self.browser = QuteBrowser()
         self.kelebek_browser = QtBrowserWidget(self.browser)
+
         self.stackedlay.addWidget(self.kelebek_browser)
         self.stackedlay.addWidget(self.mdiArea)
+        factory = FactoryView(self)
+        self.stackedlay.addWidget(factory)
 
         self.setCentralWidget(central_widget)
 
     def toolBar(self):
-        navtb = QToolBar("Navigation")
-        navtb.setIconSize(QSize(27, 27))
-        self.addToolBar(Qt.LeftToolBarArea, navtb)
+        self.navtb = QToolBar("Toolbar")
+        self.navtb.setIconSize(QSize(27, 27))
+        self.addToolBar(Qt.LeftToolBarArea, self.navtb)
 
         self.file = QAction(QIcon('images/globe.svg'), "Browser", self)
-        navtb.addAction(self.file)
+        self.navtb.addAction(self.file)
         self.file.triggered.connect(self.window1)
-        navtb.addSeparator()
+        self.navtb.addSeparator()
 
         self.filetree = QAction(QIcon('images/diagram-3-fill.svg'), "Node Editor", self)
-        navtb.addAction(self.filetree)
+        self.navtb.addAction(self.filetree)
         self.filetree.triggered.connect(self.window2)
-        navtb.addSeparator()
+        self.navtb.addSeparator()
 
-        self.highlight = QAction(QIcon('images/Highlighter.png'), 'Highlight', self)
-        navtb.addAction(self.highlight)
+        self.highlight = QAction(QIcon('images/blackhighlighter.svg'), 'Highlight', self)
+        self.navtb.addAction(self.highlight)
         self.highlight.triggered.connect(self.kelebek_browser.inspect_element)
-        navtb.addSeparator()
+        self.navtb.addSeparator()
 
-        self.play_btn = QAction(QIcon('images/play-hot.png'), 'Button', self)
-        navtb.addAction(self.play_btn)
+        self.play_btn = QAction(QIcon('images/chart.svg'), 'Chart', self)
+        self.navtb.addAction(self.play_btn)
         # self.play_btn.triggered.connect(self.print_editor_widget)
+        self.navtb.addSeparator()
 
-    def print_editor_widget(self):
+        self.chat_btn = QAction(QIcon('images/chat.svg'), 'Chat', self)
+        self.navtb.addAction(self.chat_btn)
+        # self.chat_btn.triggered.connect(self.print_editor_widget)
+        self.navtb.addSeparator()
+
+        self.factory_btn = QAction(QIcon('icons/Factory.svg'), 'Factory', self)
+        self.navtb.addAction(self.factory_btn)
+        self.factory_btn.triggered.connect(self.window3)
+        self.navtb.addSeparator()
+
+    # def
+
+    # def print_editor_widget(self):
+        # KEEP THESE AS A REFERENCE
         # this was used to test adding nodes from webbrowser by the context manager.
-        active = self.getCurrentNodeEditorWidget()
-        print('Active:', active)
-        print('mdiArea:', self.mdiArea.subWindowList())
-        print('current window:', self.mdiArea.currentSubWindow().widget().scene)
-        print('window:', self.mdiArea.window())
-        print('Getting node from op code without scene: ', get_class_from_opcode(3))
-        print(self.mdiArea.ActivationHistoryOrder)
+        # active = self.getCurrentNodeEditorWidget()
+        # print('Active:', active)
+        # print('mdiArea:', self.mdiArea.subWindowList())
+        # print('current window:', self.mdiArea.currentSubWindow().widget().scene)
+        # print('window:', self.mdiArea.window())
+        # print('Getting node from op code without scene: ', get_class_from_opcode(3))
+        # print(self.mdiArea.ActivationHistoryOrder)
 
         # new_kelebek_node = get_class_from_opcode(3)
         # new_kelebek_node.setPos(0, 0)
@@ -182,6 +203,9 @@ class KelebekWindow(NodeEditorWindow):
 
     def window2(self):
         self.stackedlay.setCurrentIndex(1)
+
+    def window3(self):
+        self.stackedlay.setCurrentIndex(2)
 
     def closeEvent(self, event):
         self.mdiArea.closeAllSubWindows()
@@ -245,8 +269,8 @@ class KelebekWindow(NodeEditorWindow):
         except Exception as e: dumpException(e)
 
     def about(self):
-        QMessageBox.about(self, "About Automaton NodeEditor Example",
-                "The <b>Automaton NodeEditor</b> example demonstrates how to write multiple "
+        QMessageBox.about(self, "About Kelebek NodeEditor",
+                "The <b>Kelebek NodeEditor</b> example demonstrates how to write multiple "
                 "document interface applications using PyQt5 and NodeEditor. For more information visit: "
                 "<a href='https://www.blenderfreak.com/'>www.BlenderFreak.com</a>")
 
@@ -310,10 +334,13 @@ class KelebekWindow(NodeEditorWindow):
         toolbar_nodes.setCheckable(True)
         toolbar_nodes.triggered.connect(self.onWindowNodesToolbar)
         toolbar_nodes.setChecked(self.nodesDock.isVisible())
-
         self.windowMenu.addSeparator()
-        # self.windowMenu.addMenu()
-        # self.windowMenu.addSection()
+
+        toolbar = self.windowMenu.addAction('Toolbar')
+        toolbar.setCheckable(True)
+        toolbar.triggered.connect(self.onWindowToolbar)
+        toolbar.setCheckable(self.navtb.isVisible())
+        self.windowMenu.addSeparator()
 
         self.windowMenu.addAction(self.actClose)
         self.windowMenu.addAction(self.actCloseAll)
@@ -346,6 +373,12 @@ class KelebekWindow(NodeEditorWindow):
             self.nodesDock.hide()
         else:
             self.nodesDock.show()
+
+    def onWindowToolbar(self):
+        if self.navtb.isVisible():
+            self.navtb.hide()
+        else:
+            self.navtb.show()
 
     # def createNodesDock(self):
     #     self.nodesListWidget = QDMDragListbox()

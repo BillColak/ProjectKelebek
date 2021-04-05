@@ -45,7 +45,6 @@ class KelebekSubWindow(NodeEditorWidget):
         if super().fileLoad(filename):
             self.doEvalOutputs()
             return True
-
         return False
 
     def initNewNodeActions(self):
