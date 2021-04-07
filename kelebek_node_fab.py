@@ -9,10 +9,10 @@ from nodeeditor.node_graphics_node import QDMGraphicsNode
 from nodeeditor.utils import dumpException
 from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER, LEFT_TOP, LEFT_BOTTOM, RIGHT_TOP, RIGHT_BOTTOM
 
-from testnodeobject import BoxItem
+from kelebek_factory_node import ResizableNode
 
 
-class FactoryGraphicsNode(BoxItem):
+class FactoryGraphicsNode(ResizableNode):
     def initSizes(self):
         super().initSizes()
         self.width = self.rect.width()
@@ -71,7 +71,7 @@ class FactoryNode(Node):
     content_label = ""
     content_label_objname = "kelebek_node_bg"
 
-    def __init__(self, scene, inputs=[2, 3, 4], outputs=[1]):
+    def __init__(self, scene, inputs=[], outputs=[1]):
         super().__init__(scene, self.__class__.op_title, inputs, outputs)
 
     def initInnerClasses(self):

@@ -34,6 +34,14 @@ DEBUG = False
 # TODO https://stackoverflow.com/questions/3770084/efficiently-updating-a-qtableview-at-high-speed?rq=1
 # https://dribbble.com/shots/15266170-Bitoket-cryptocurrency-UI-and-UX-Design-Darkmode/attachments/7017779?mode=media
 # https://dribbble.com/shots/7797656-Tree-View/attachments/458993?mode=media
+# https://dribbble.com/shots/13964955-Bitoket-cryptocurrency-Dashboard-UI-and-UX-Design
+# https://dribbble.com/shots/14073238-Bitoket-cryptocurrency-Landing-page-design
+# https://dribbble.com/shots/15423799-Admin-Dashboard
+# https://dribbble.com/shots/15186334-Celsius-Web-App-Dashboard
+# https://dribbble.com/shots/14645371-Socialy-Social-Media-Analytics-Dashboard
+# https://dribbble.com/shots/15326758-Dashboard-for-My-Crowd-musician
+# https://dribbble.com/shots/15325310-FinTech-Dashboard-Layout-samples *****
+# https://stock.adobe.com/ca/283006387?as_channel=adobe_com&as_campclass=brand&as_campaign=srp-raill&as_source=behance_net&as_camptype=acquisition&as_audience=users&as_content=thumbnail-click&promoid=J7XBWPPS&mv=other&asset_id=361039498
 
 
 class KelebekWindow(NodeEditorWindow):
