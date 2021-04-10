@@ -5,11 +5,18 @@ from PyQt5.QtCore import *
 
 class SocketInput(QWidget):
 
+    name_changed = pyqtSignal(str)
+
     def __init__(self, node: 'Node', parent=None):
+
         super().__init__(parent)
+
         self.node = node
+        # self.grNode = self.node.grNode
         self.socket_type = '#ffaaff'
+        self.name = 'sadasdas'
         self.socket = None
+        self.index = len(self.node.inputs)
 
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -17,6 +24,7 @@ class SocketInput(QWidget):
 
         self.socket_name = QLineEdit()
         self.socket_name.setPlaceholderText('Optional: Enter Socket Name')
+        self.socket_name.textChanged.connect(self.socket_name_changed)
 
         self.socket_color = QPushButton('Socket Color')
         self.socket_color.clicked.connect(self.openColorDialog)
@@ -33,33 +41,61 @@ class SocketInput(QWidget):
         self.initSocket()
 
     def removeMe(self):
+        self.node.inputs.pop(self.index)
+        self.node.scene.grScene.removeItem(self.socket.grSocket)
         self.setParent(None)
         self.deleteLater()
 
     def initSocket(self):
-        x = [i.socket_type for i in self.parent().children() if hasattr(i, 'socket_type')]
-        self.node.initSockets(x, [1])
+        inputs = [i for i in self.parent().children() if hasattr(i, 'socket_type')]
+        if self.node.inputs:
+            for socket in self.node.inputs:
+                self.node.scene.grScene.removeItem(socket.grSocket)
+            self.node.inputs = []
+
+        counter = 0
+        for item in inputs:
+            self.socket = self.node.__class__.Socket_class(
+                node=self.node, index=counter, position=self.node.input_socket_position,
+                socket_type=item.socket_type, multi_edges=self.node.input_multi_edged,
+                count_on_this_node_side=len(inputs), is_input=True, name=item.name
+            )
+            counter += 1
+            self.node.inputs.append(self.socket)
 
     @pyqtSlot()
     def openColorDialog(self):
         color = QColorDialog.getColor()
         if color.isValid():
-            print(color.name())
             self.socket_type = color.name()
+            # socket = self.node.inputs[self.index]
+            self.socket.grSocket.socket_type = self.socket_type
+            self.socket.grSocket.changeSocketType()
+            # self.initSocket()
+
+    def socket_name_changed(self, s):
+        self.name = str(s)
+        self.socket = self.node.inputs[self.index]
+        self.socket.grSocket.setSocketTitle(str(s))
+
+        # x, y = self.node.getSocketPosition(socket.index, socket.position, socket.count_on_this_node_side)
+        # self.node.grNode.socketTitle(s)
 
 
 class FactorySocketHandler(QWidget):
+
     def __init__(self, node: 'Node', parent=None):
         super().__init__(parent)
+
         self.node = node
 
-        self.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(QVBoxLayout())
 
-        self.add_socket = QPushButton(QIcon('icons/add.png'), "Add Socket", self, clicked=self.insertSocket)
-        self.add_socket.setStyleSheet("background-color: #00d100; color: #000000;")
-        self.layout().addWidget(self.add_socket, Qt.AlignTop)
-        self.layout().insertStretch(-1)
+        # self.add_socket = QPushButton(QIcon('icons/add.png'), "Add Socket", self, clicked=self.insertSocket)
+        # self.add_socket.setStyleSheet("background-color: #00d100; color: #000000;")
+        # self.layout().addWidget(self.add_socket, Qt.AlignTop)
+        # self.layout().insertStretch(-1)
 
     def insertSocket(self):
         self.layout().addWidget(SocketInput(self.node, self), Qt.AlignTop)

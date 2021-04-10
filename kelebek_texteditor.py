@@ -134,15 +134,28 @@ class FactoryNodeOpTextEdit(QTextEdit):
 
 
 class KelebekSyntaxHighlighter(QWidget):
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, socket_handler, parent: QWidget = None):
         super().__init__(parent)
-
+        self.socket_handler = socket_handler
         self.setLayout(QVBoxLayout())
         self.textEdit = FactoryNodeOpTextEdit()
         self.button = QPushButton("eval", clicked=self.evalEditorText)
 
+        self.add_socket = QPushButton(QIcon('icons/add.png'), "Add Socket", clicked=self.socket_handler.insertSocket)
+        # self.add_socket.setStyleSheet("background-color: #00d100; color: #000000;")
+
+        self.save_node = QPushButton(QIcon('icons/add.png'), "Save", clicked=self.socket_handler.insertSocket)
+        self.save_node.setStyleSheet("background-color: #00d100; color: #000000;")
+
         self.layout().addWidget(self.textEdit)
-        self.layout().addWidget(self.button)
+        btn_lay = QHBoxLayout()
+        self.layout().addLayout(btn_lay)
+        btn_lay.addWidget(self.button)
+        btn_lay.addWidget(self.add_socket)
+        btn_lay.addWidget(self.save_node)
+
+        # self.layout().addWidget(self.button)
+        # self.layout().addWidget(self.add_socket)
 
     def evalEditorText(self):
         text = self.textEdit.toPlainText()  # capture the white spaces as well

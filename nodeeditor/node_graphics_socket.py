@@ -16,9 +16,12 @@ SOCKET_COLORS = [
     QColor("#FF888888"),
 ]
 
+
 class QDMGraphicsSocket(QGraphicsItem):
+
     """Class representing Graphic `Socket` in ``QGraphicsScene``"""
-    def __init__(self, socket:'Socket'):
+    # def __init__(self, socket: 'Socket'):
+    def __init__(self, socket: 'Socket', name='name', is_input: bool = False):
         """
         :param socket: reference to :class:`~nodeeditor.node_socket.Socket`
         :type socket: :class:`~nodeeditor.node_socket.Socket`
@@ -26,6 +29,9 @@ class QDMGraphicsSocket(QGraphicsItem):
         super().__init__(socket.node.grNode)
 
         self.socket = socket
+        self._title = name
+        self.is_input = is_input
+        self.title_item = QGraphicsTextItem(self)
 
         self.isHighlighted = False
 
@@ -33,16 +39,18 @@ class QDMGraphicsSocket(QGraphicsItem):
         self.outline_width = 1.0
         self.initAssets()
 
-    #     if self.socket.node.grNode.__class__.__name__ == 'FactoryGraphicsNode':
-    #         self.socket.node.grNode.size_changed.connect(self.fatty)
-    #
-    # def fatty(self, s: QRect):
-    #     print(s, self.pos())
-    #     self.setPos(s.width(), s.height()/2)
+    def setSocketTitle(self, value):
+        self._title = value
+        self.title_item.setPlainText(self._title)
 
     @property
     def socket_type(self):
         return self.socket.socket_type
+
+    @socket_type.setter
+    def socket_type(self, value):
+        self.socket.socket_type = value
+        # self.socket.socket_type = self.socket_type
 
     def getSocketColor(self, key):
         """Returns the ``QColor`` for this ``key``"""
@@ -59,6 +67,9 @@ class QDMGraphicsSocket(QGraphicsItem):
 
     def initAssets(self):
         """Initialize ``QObjects`` like ``QColor``, ``QPen`` and ``QBrush``"""
+        self._title_color = Qt.white
+        self._title_font = QFont("Segoe UI", 8)
+        self.title_horizontal_padding = 4.0
 
         # determine socket color
         self._color_background = self.getSocketColor(self.socket_type)
@@ -77,11 +88,23 @@ class QDMGraphicsSocket(QGraphicsItem):
         painter.setPen(self._pen if not self.isHighlighted else self._pen_highlight)
         painter.drawEllipse(-self.radius, -self.radius, 2 * self.radius, 2 * self.radius)
 
+        if self.is_input:
+        # self.title_item = QGraphicsTextItem(self)
+            self.title_item.setDefaultTextColor(self._title_color)
+            self.title_item.setFont(self._title_font)
+            self.title_item.setPlainText(self._title)
+            self.title_item.setPos(self.radius, - self.radius * 2 - 4)
+
+        # if self.is_input:  # --> this lags?
+        #     self.title_item.setPos(self.radius, - self.radius*2-4)
+        #     # -6*2-2=-14 -> 10, -6*2-5=-17 -> 8
+        #     self.title_item.setPlainText(self._title)  # to use text width this has to come before
+
     def boundingRect(self) -> QRectF:
         """Defining Qt' bounding rectangle"""
         return QRectF(
             - self.radius - self.outline_width,
             - self.radius - self.outline_width,
-            2 * (self.radius + self.outline_width),
+            2 * (self.radius + self.outline_width) + self.title_item.textWidth(),
             2 * (self.radius + self.outline_width),
         )

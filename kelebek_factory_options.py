@@ -49,10 +49,10 @@ class FactoryNodeOptions(QWidget):
             x, y = self.node.getSocketPosition(socket.index, socket.position, socket.count_on_this_node_side)
             print(x, y)
 
-    def socket_amount(self, s):
-        x = [1 for i in range(int(s))]
-        print(x)
-        self.node.initSockets(x, [0], reset=False)  # make the rest false to append sockets vs remaking.
+    # def socket_amount(self, s):
+    #     x = [1 for i in range(int(s))]
+    #     print(x)
+    #     self.node.initSockets(x, [0], reset=False)  # make the rest false to append sockets vs remaking.
 
     def setNodeTitle(self, s):
         self.node.grNode.setTitle(s)

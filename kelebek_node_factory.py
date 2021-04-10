@@ -6,7 +6,7 @@ from nodeeditor.node_scene import Scene
 # from nodeeditor.node_graphics_scene import QDMGraphicsScene
 from nodeeditor.node_graphics_view import QDMGraphicsView
 from kelebek_node_base import KelebekNode
-from kelebek_node_fab import FactoryNode
+from kelebek_factory_node import FactoryNode
 from kelebek_texteditor import MyHighlighter, KelebekSyntaxHighlighter
 from kelebek_factory_sockets import FactorySocketHandler
 from kelebek_factory_options import FactoryNodeOptions
@@ -89,8 +89,8 @@ class FactoryView(QWidget):
 
         self.node = FactoryNode(self.scene)
 
-        highlighter = KelebekSyntaxHighlighter()
         sockethandler = FactorySocketHandler(self.node)
+        highlighter = KelebekSyntaxHighlighter(sockethandler)
         options = FactoryNodeOptions(self.node)
 
         splitter2 = QSplitter(Qt.Horizontal)

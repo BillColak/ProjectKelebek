@@ -24,7 +24,7 @@ class Socket(Serializable):
 
     """Class representing Socket."""
 
-    def __init__(self, node:'Node', index:int=0, position:int=LEFT_TOP, socket_type:int=1, multi_edges:bool=True, count_on_this_node_side:int=1, is_input:bool=False):
+    def __init__(self, node:'Node', index:int=0, position:int=LEFT_TOP, socket_type:int=1, multi_edges:bool=True, count_on_this_node_side:int=1, is_input:bool=False, name='name undefined'):
         """
         :param node: reference to the :class:`~nodeeditor.node_node.Node` containing this `Socket`
         :type node: :class:`~nodeeditor.node_node.Node`
@@ -54,6 +54,8 @@ class Socket(Serializable):
         """
         super().__init__()
 
+        self.name = name
+
         self.node = node
         self.position = position
         self.index = index
@@ -66,8 +68,7 @@ class Socket(Serializable):
 
         if DEBUG: print("Socket -- creating with", self.index, self.position, "for nodeeditor", self.node)
 
-
-        self.grSocket = self.__class__.Socket_GR_Class(self)
+        self.grSocket = self.__class__.Socket_GR_Class(self, name=self.name, is_input=is_input)
 
         self.setSocketPosition()
 
@@ -114,7 +115,6 @@ class Socket(Serializable):
         res = self.node.getSocketPosition(self.index, self.position, self.count_on_this_node_side)
         if DEBUG: print("  res", res)
         return res
-
 
     def hasAnyEdge(self) -> bool:
         """
