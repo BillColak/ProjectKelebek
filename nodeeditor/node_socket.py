@@ -190,6 +190,7 @@ class Socket(Serializable):
             ('multi_edges', self.is_multi_edges),
             ('position', self.position),
             ('socket_type', self.socket_type),
+            ('socket_name', self.name),
         ])
 
     def deserialize(self, data:dict, hashmap:dict={}, restore_id:bool=True) -> bool:

@@ -1,4 +1,5 @@
-
+import os
+import json
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -7,9 +8,10 @@ from PyQt5.QtCore import *
 
 class MyHighlighter(QSyntaxHighlighter):
 
-    def __init__(self, parent, theme):
+    def __init__(self, parent):
         QSyntaxHighlighter.__init__(self, parent)
         self.parent = parent
+        # self.node_inputs = QTextCharFormat()
         keyword = QTextCharFormat()
         reservedClasses = QTextCharFormat()
         assignmentOperator = QTextCharFormat()
@@ -109,16 +111,49 @@ class MyHighlighter(QSyntaxHighlighter):
         rule = HighlightingRule(pattern, singleQuotedString)
         self.highlightingRules.append(rule)
 
+        # self.commentStartExpression = QRegExp("/\\*")
+        # self.commentEndExpression = QRegExp("\\*/")
+
     def highlightBlock(self, text):  # todo
+        # for pattern, format in self.highlightingRules:
         for rule in self.highlightingRules:
             expression = QRegExp(rule.pattern)
             index = expression.indexIn(text)
             while index >= 0:
                 length = expression.matchedLength()
                 self.setFormat(index, length, rule.format)
-                # index = text.indexOf(expression, index + length)
-                index = -1
+                index = expression.indexIn(text, index + length)
         self.setCurrentBlockState(0)
+
+        #  #The code below is for making comments in c++
+        # startIndex = 0
+        # if self.previousBlockState() != 1:
+        #     startIndex = self.commentStartExpression.indexIn(text)
+        #
+        # while startIndex >= 0:
+        #     endIndex = self.commentEndExpression.indexIn(text, startIndex)
+        #
+        #     if endIndex == -1:
+        #         self.setCurrentBlockState(1)
+        #         commentLength = len(text) - startIndex
+        #     else:
+        #         commentLength = endIndex - startIndex + self.commentEndExpression.matchedLength()
+        #
+        #     self.setFormat(startIndex, commentLength,
+        #             self.multiLineCommentFormat)
+        #     startIndex = self.commentStartExpression.indexIn(text,
+        #             startIndex + commentLength)
+
+        #  #Alternative way
+        # for rule in self.highlightingRules:
+        #     expression = QRegExp(rule.pattern)
+        #     index = expression.indexIn(text)
+        #     while index >= 0:
+        #         length = expression.matchedLength()
+        #         self.setFormat(index, length, rule.format)
+        #         # index = text.indexOf(expression, index + length)
+        #         index = -1
+        # self.setCurrentBlockState(0)
 
 
 class HighlightingRule():
@@ -128,23 +163,39 @@ class HighlightingRule():
 
 
 class FactoryNodeOpTextEdit(QTextEdit):
+    textEditor_clicked = pyqtSignal()
+
     def __init__(self, *args):
         super(FactoryNodeOpTextEdit, self).__init__(*args)
-        highlighter = MyHighlighter(self, "Classic")
+
+        self.highlighter = MyHighlighter(self)
+
+    def s_highlight(self):
+        return self.highlighter
+
+    def mousePressEvent(self, e: QMouseEvent) -> None:
+        super().mousePressEvent(e)
+        self.textEditor_clicked.emit()
 
 
 class KelebekSyntaxHighlighter(QWidget):
+
+    save_signal = pyqtSignal(object)
+    emit_eval = pyqtSignal(object)
+
     def __init__(self, socket_handler, parent: QWidget = None):
         super().__init__(parent)
+
         self.socket_handler = socket_handler
         self.setLayout(QVBoxLayout())
         self.textEdit = FactoryNodeOpTextEdit()
-        self.button = QPushButton("eval", clicked=self.evalEditorText)
+        self.textEdit.textEditor_clicked.connect(self.addSyntax)
+        self.button = QPushButton("eval", clicked=self.evalText)
 
         self.add_socket = QPushButton(QIcon('icons/add.png'), "Add Socket", clicked=self.socket_handler.insertSocket)
         # self.add_socket.setStyleSheet("background-color: #00d100; color: #000000;")
 
-        self.save_node = QPushButton(QIcon('icons/add.png'), "Save", clicked=self.socket_handler.insertSocket)
+        self.save_node = QPushButton("Save", clicked=self.saveNodeSignal)
         self.save_node.setStyleSheet("background-color: #00d100; color: #000000;")
 
         self.layout().addWidget(self.textEdit)
@@ -154,37 +205,36 @@ class KelebekSyntaxHighlighter(QWidget):
         btn_lay.addWidget(self.add_socket)
         btn_lay.addWidget(self.save_node)
 
-        # self.layout().addWidget(self.button)
-        # self.layout().addWidget(self.add_socket)
+    def addSyntax(self):
+        for k, v in self.socket_handler.getSocketsNameType():
+            keyword = QTextCharFormat()
+            brush = QBrush(QColor(v), Qt.SolidPattern)
+            keyword.setForeground(brush)
+            keyword.setFontWeight(QFont.Bold)
 
-    def evalEditorText(self):
-        text = self.textEdit.toPlainText()  # capture the white spaces as well
-        print(text)
-        # eval(text)
+            pattern = QRegExp("\\b" + k + "\\b")
+            rule = HighlightingRule(pattern, keyword)
+            highlighter = self.textEdit.s_highlight()
+            highlighter.highlightingRules.append(rule)
+            highlighter.rehighlight()
 
+    def saveNodeSignal(self):
+        text = self.textEdit.toPlainText()
+        self.save_signal.emit(text)
 
+    def evalText(self):
+        text = self.textEdit.toPlainText()
+        self.emit_eval.emit(text)
 
-
-
-
-
-
-# class App(QMainWindow):
-#     def __init__(self):
-#         QMainWindow.__init__(self)
-#         font = QFont()
-#         font.setFamily("Courier")
-#         font.setFixedPitch(True)
-#         font.setPointSize(10)
-#         editor = QTextEdit()
-#         editor.setFont(font)
-#         highlighter = MyHighlighter(editor, "Classic")
-#         self.setCentralWidget(editor)
-#         self.setWindowTitle("Syntax Highlighter")
-#
-#
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = App()
-#     window.show()
-#     sys.exit(app.exec_())
+    # def evalText(self):
+    #     # https://realpython.com/python-eval-function/#general-purpose-expressions
+    #
+    #     x = {'input1': 55, 'input2': 5}
+    #     try:
+    #         text = self.textEdit.toPlainText()
+    #         evaluation = eval(text, x)
+    #         print(evaluation)
+    #     except Exception as e:
+    #         print("Exception:", e)
+    #
+    #

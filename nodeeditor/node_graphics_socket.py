@@ -40,6 +40,7 @@ class QDMGraphicsSocket(QGraphicsItem):
         self.initAssets()
 
     def setSocketTitle(self, value):
+        self.socket.name = value
         self._title = value
         self.title_item.setPlainText(self._title)
 
@@ -50,7 +51,6 @@ class QDMGraphicsSocket(QGraphicsItem):
     @socket_type.setter
     def socket_type(self, value):
         self.socket.socket_type = value
-        # self.socket.socket_type = self.socket_type
 
     def getSocketColor(self, key):
         """Returns the ``QColor`` for this ``key``"""
@@ -89,16 +89,10 @@ class QDMGraphicsSocket(QGraphicsItem):
         painter.drawEllipse(-self.radius, -self.radius, 2 * self.radius, 2 * self.radius)
 
         if self.is_input:
-        # self.title_item = QGraphicsTextItem(self)
             self.title_item.setDefaultTextColor(self._title_color)
             self.title_item.setFont(self._title_font)
             self.title_item.setPlainText(self._title)
             self.title_item.setPos(self.radius, - self.radius * 2 - 4)
-
-        # if self.is_input:  # --> this lags?
-        #     self.title_item.setPos(self.radius, - self.radius*2-4)
-        #     # -6*2-2=-14 -> 10, -6*2-5=-17 -> 8
-        #     self.title_item.setPlainText(self._title)  # to use text width this has to come before
 
     def boundingRect(self) -> QRectF:
         """Defining Qt' bounding rectangle"""

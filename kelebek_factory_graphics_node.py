@@ -27,7 +27,6 @@ class ResizableNode(QGraphicsObject):
         self._was_moved = False
         self._last_selected_state = False
 
-
         self.mousePressPos = None
         self.mousePressRect = None
 
@@ -42,7 +41,6 @@ class ResizableNode(QGraphicsObject):
         self.initUI()
 
         self.size_changed.connect(self.move_sockets)
-
 
     def move_sockets(self, s):
         for output_socket in self.node.outputs:
@@ -71,9 +69,8 @@ class ResizableNode(QGraphicsObject):
                 y = 0
             input_socket.grSocket.setPos(-1, y)
 
-
     def changeTitleColor(self, color):
-        self._brush_title = QColor(str(color))
+        self.brush_title = str(color)
         self.update()
 
     @property
@@ -98,6 +95,7 @@ class ResizableNode(QGraphicsObject):
 
     def setTitle(self, value):
         self._title = value
+        self.node.title = value
         self.title_item.setPlainText(self._title)
 
     def initUI(self):
@@ -116,7 +114,7 @@ class ResizableNode(QGraphicsObject):
     # TODO initsizes, assets, content and title should be stored in a json file.
     def initSizes(self):
         """Set up internal attributes like `width`, `height`, etc."""
-        self.width = self.rect.width()
+        self.width = self.rect.width()  # todo get rid of these when have a chance
         self.height = self.rect.height()
         self.edge_roundness = 10.0
         self.edge_padding = 0
@@ -140,7 +138,7 @@ class ResizableNode(QGraphicsObject):
         self._pen_hovered = QPen(self._color_hovered)
         self._pen_hovered.setWidthF(3.0)
 
-        self._brush_title = QBrush(QColor("#51CD47"))
+        self.brush_title = "#51CD47"
         self._brush_background = QBrush(QColor("#E3212121"))
 
     def initContent(self):
@@ -163,7 +161,7 @@ class ResizableNode(QGraphicsObject):
         self.title_item.setFont(self._title_font)
         self.title_item.setPos(self.title_horizontal_padding, 0)
         self.title_item.setTextWidth(
-            self.width
+            self.rect.width()
             - 2 * self.title_horizontal_padding
         )
 
@@ -201,7 +199,7 @@ class ResizableNode(QGraphicsObject):
         path_title.addRect(self.rect.width() - self.edge_roundness, self.title_height - self.edge_roundness,
                            self.edge_roundness, self.edge_roundness)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(self._brush_title)
+        painter.setBrush(QBrush(QColor(str(self.brush_title))))
         painter.drawPath(path_title.simplified())
 
         # content

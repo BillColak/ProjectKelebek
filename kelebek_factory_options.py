@@ -4,6 +4,7 @@ from PyQt5.QtCore import *
 
 
 class FactoryNodeOptions(QWidget):
+
     def __init__(self, node: 'Node', parent: QWidget = None):
         super().__init__(parent)
         self.node = node
@@ -31,14 +32,15 @@ class FactoryNodeOptions(QWidget):
         self.node_color = QColorButton('Node Color')
         self.node_color.colorChanged.connect(self.change_nodecolor)
 
+        # TODO  all these options should be lineedits with editorfactory enabled changing the editor widget on click. to keep the look consistent.
         form_fields = {
             'Title:': self.node_title,
             'Shape:': self.combo,
             # 'Sockets:': self.socketspinbox,
-            'Socket Position': self.socket_posCombo,
-            'Category': QLineEdit(),
-            'Sub Category (Optional)': self.socket_pos,
-            'Tooltip': QLineEdit('Enter node tooltip'),
+            'Socket Position': self.socket_posCombo,  # --> is this really nessacary
+            'Category': QLineEdit(),  # --> treeview
+            # 'Sub Category (Optional)': self.socket_pos,
+            'Tooltip': QLineEdit('Enter node tooltip'),  # --> for treeview only
             'node color': self.node_color,
         }
         for k, v in form_fields.items():

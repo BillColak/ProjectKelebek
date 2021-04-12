@@ -36,7 +36,7 @@ class QDMNodeContentWidget(QWidget, Serializable):
         self.layout.addWidget(self.wdg_label)
         self.layout.addWidget(QDMTextEdit("foo"))
 
-    def setEditingFlag(self, value:bool):
+    def setEditingFlag(self, value: bool):
         """
         .. note::
 

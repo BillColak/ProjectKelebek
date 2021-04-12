@@ -14,7 +14,7 @@ class SocketInput(QWidget):
         self.node = node
         # self.grNode = self.node.grNode
         self.socket_type = '#ffaaff'
-        self.name = 'sadasdas'
+        self.name = ''
         self.socket = None
         self.index = len(self.node.inputs)
 
@@ -23,7 +23,7 @@ class SocketInput(QWidget):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.socket_name = QLineEdit()
-        self.socket_name.setPlaceholderText('Optional: Enter Socket Name')
+        self.socket_name.setPlaceholderText('Enter Socket Name')
         self.socket_name.textChanged.connect(self.socket_name_changed)
 
         self.socket_color = QPushButton('Socket Color')
@@ -68,22 +68,18 @@ class SocketInput(QWidget):
         color = QColorDialog.getColor()
         if color.isValid():
             self.socket_type = color.name()
-            # socket = self.node.inputs[self.index]
+
+            self.socket = self.node.inputs[self.index]
             self.socket.grSocket.socket_type = self.socket_type
             self.socket.grSocket.changeSocketType()
-            # self.initSocket()
 
     def socket_name_changed(self, s):
         self.name = str(s)
         self.socket = self.node.inputs[self.index]
         self.socket.grSocket.setSocketTitle(str(s))
 
-        # x, y = self.node.getSocketPosition(socket.index, socket.position, socket.count_on_this_node_side)
-        # self.node.grNode.socketTitle(s)
-
 
 class FactorySocketHandler(QWidget):
-
     def __init__(self, node: 'Node', parent=None):
         super().__init__(parent)
 
@@ -92,12 +88,11 @@ class FactorySocketHandler(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(QVBoxLayout())
 
-        # self.add_socket = QPushButton(QIcon('icons/add.png'), "Add Socket", self, clicked=self.insertSocket)
-        # self.add_socket.setStyleSheet("background-color: #00d100; color: #000000;")
-        # self.layout().addWidget(self.add_socket, Qt.AlignTop)
-        # self.layout().insertStretch(-1)
-
     def insertSocket(self):
         self.layout().addWidget(SocketInput(self.node, self), Qt.AlignTop)
+
+    def getSocketsNameType(self):
+        return [(i.name, i.socket_type) for i in self.children() if hasattr(i, 'socket_type')]
+
 
 

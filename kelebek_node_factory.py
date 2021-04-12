@@ -1,13 +1,15 @@
+import os
+import json
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 from nodeeditor.node_scene import Scene
-# from nodeeditor.node_graphics_scene import QDMGraphicsScene
 from nodeeditor.node_graphics_view import QDMGraphicsView
-from kelebek_node_base import KelebekNode
+# from nodeeditor.node_graphics_scene import QDMGraphicsScene
+# from kelebek_node_base import KelebekNode
 from kelebek_factory_node import FactoryNode
-from kelebek_texteditor import MyHighlighter, KelebekSyntaxHighlighter
+from kelebek_texteditor import KelebekSyntaxHighlighter
 from kelebek_factory_sockets import FactorySocketHandler
 from kelebek_factory_options import FactoryNodeOptions
 
@@ -97,14 +99,31 @@ class FactoryView(QWidget):
         splitter2.addWidget(options)
         splitter2.addWidget(highlighter)
         splitter2.addWidget(sockethandler)
-
-        # width = qApp.desktop().availableGeometry(self).width()
-        # print(splitter2.width(), splitter1.width())
-        # splitter2.setSizes([int(splitter2.width()*1/4), int(splitter2.width()*1/2), int(splitter2.width()*1/4)])
-        # splitter2.saveState()
         splitter2.saveGeometry()
-        # https://doc.qt.io/qt-5/qsplitter.html#saveState
         splitter1.addWidget(splitter2)
 
         self.layout.addWidget(splitter1)
-        # self.layout.addWidget(self.view_layout)
+        highlighter.save_signal.connect(self.saveNode)
+        highlighter.emit_eval.connect(self.saveNode)
+
+    def eval_text(self, s):
+        try:
+            evaluation = eval(s)
+            print(evaluation)
+        except Exception as e:
+            print("Exception:", e)
+
+    def saveNode(self, s):
+        custom_nodes = os.path.join(os.path.dirname(__file__), "customnodes")
+        node_title = str(self.node.title) + '.json'
+        new_node = custom_nodes + '/' + node_title
+
+        ser_node = self.node.serialize()
+        ser_node['shape'] = 'rounded rectangle'
+        ser_node['operation'] = s
+        print(ser_node)
+        if node_title in os.listdir(custom_nodes):
+            print('raise an alert dialog')
+        else:
+            with open(new_node, 'w') as file:
+                file.write(json.dumps(ser_node, indent=4))

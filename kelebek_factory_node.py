@@ -43,6 +43,7 @@ class FactoryGraphicsNode(ResizableNode):
 
 class FactoryNodeContent(QDMNodeContentWidget):
     def initUI(self):
+        # self.node_op = QLabel('op', self)
         self.contentlayout = QFormLayout(self)
         self.edit = QLineEdit("Enter XPath", self)
         self.edit.setAlignment(Qt.AlignLeft)
@@ -85,7 +86,7 @@ class FactoryNode(Node):
         self.input_multi_edged = False
         self.output_multi_edged = True
 
-    def evalOperation(self, input1, input2):
+    def evalOperation(self, *args, **kwargs):
         return 123
 
     def evalImplementation(self):
@@ -98,10 +99,23 @@ class FactoryNode(Node):
         pass
 
     def serialize(self):
-        pass
+        res = super().serialize()
+        res['color'] = self.grNode.brush_title
+        res['width'] = self.grNode.rect.width()
+        res['height'] = self.grNode.rect.height()
+        return res
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         pass
+
+        # res = super().deserialize(data, hashmap)
+        # try:
+        #     value = data['value']
+        #     self.edit.setText(value)
+        #     return True & res
+        # except Exception as e:
+        #     dumpException(e)
+        # return res
 
 
 
