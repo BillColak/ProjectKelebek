@@ -3,13 +3,16 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-from nodeeditor.node_node import Node
-from nodeeditor.node_content_widget import QDMNodeContentWidget
-from nodeeditor.node_graphics_node import QDMGraphicsNode
-from nodeeditor.utils import dumpException
+# from nodeeditor.node_node import Node
+from kelebek_node_base import KelebekNode
+# from nodeeditor.node_content_widget import QDMNodeContentWidget
+# from nodeeditor.node_graphics_node import QDMGraphicsNode
+# from nodeeditor.utils import dumpException
 from nodeeditor.node_socket import LEFT_CENTER, RIGHT_CENTER, LEFT_TOP, LEFT_BOTTOM, RIGHT_TOP, RIGHT_BOTTOM
 
 from kelebek_factory_graphics_node import ResizableNode
+from colorama import Fore
+# from kelebek_conf import register_node2, CUSTOM_NODE
 
 
 class FactoryGraphicsNode(ResizableNode):
@@ -41,39 +44,40 @@ class FactoryGraphicsNode(ResizableNode):
         )
 
 
-class FactoryNodeContent(QDMNodeContentWidget):
-    def initUI(self):
-        # self.node_op = QLabel('op', self)
-        self.contentlayout = QFormLayout(self)
-        self.edit = QLineEdit("Enter XPath", self)
-        self.edit.setAlignment(Qt.AlignLeft)
-        self.contentlayout.addRow('XPath', self.edit)
+# class FactoryNodeContent(QDMNodeContentWidget):
+#     def initUI(self):
+#         # self.node_op = QLabel('op', self)
+#         self.contentlayout = QFormLayout(self)
+#         self.edit = QLineEdit("Enter XPath", self)
+#         self.edit.setAlignment(Qt.AlignLeft)
+#         self.contentlayout.addRow('XPath', self.edit)
+#
+#     def serialize(self):
+#         res = super().serialize()
+#         res['value'] = self.edit.text()
+#         return res
+#
+#     def deserialize(self, data, hashmap={}):
+#         res = super().deserialize(data, hashmap)
+#         try:
+#             value = data['value']
+#             self.edit.setText(value)
+#             return True & res
+#         except Exception as e:
+#             dumpException(e)
+#         return res
 
-    def serialize(self):
-        res = super().serialize()
-        res['value'] = self.edit.text()
-        return res
 
-    def deserialize(self, data, hashmap={}):
-        res = super().deserialize(data, hashmap)
-        try:
-            value = data['value']
-            self.edit.setText(value)
-            return True & res
-        except Exception as e:
-            dumpException(e)
-        return res
-
-
-class FactoryNode(Node):
+class FactoryNode(KelebekNode):
     icon = ""
-    op_code = 0
+    op_code = 12
     op_title = "Name Undefined"
     content_label = ""
     content_label_objname = "kelebek_node_bg"
+    category = 'Factory Nodes'
 
-    def __init__(self, scene, inputs=[], outputs=[1]):
-        super().__init__(scene, self.__class__.op_title, inputs, outputs)
+    def __init__(self, scene):
+        super().__init__(scene, inputs=[], outputs=[1])
 
     def initInnerClasses(self):
         # self.content = FactoryNodeContent(self)
@@ -83,23 +87,26 @@ class FactoryNode(Node):
         super().initSettings()
         self.input_socket_position = LEFT_CENTER
         self.output_socket_position = RIGHT_CENTER
-        self.input_multi_edged = False
+        self.input_multi_edged = True
         self.output_multi_edged = True
 
     def evalOperation(self, *args, **kwargs):
+        print(Fore.BLUE, 'FACTORY INPUT:', args, kwargs)
         return 123
 
     def evalImplementation(self):
-        pass
-
-    def eval(self, index=0):
-        pass
-
-    def onInputChanged(self, socket=None):
-        pass
+        ins = {}
+        for index, socket in enumerate(self.inputs):
+            inp: list = [i.eval() for i in self.getInputs(index)]
+            # todo if there is no name for more than one node this code will blow up.
+            s_name: str = str(socket.name)
+            ins[s_name] = inp
+        val = self.evalOperation(**ins)
+        return val
 
     def serialize(self):
         res = super().serialize()
+        res['op_code'] = self.__class__.op_code
         res['color'] = self.grNode.brush_title
         res['width'] = self.grNode.rect.width()
         res['height'] = self.grNode.rect.height()
@@ -107,15 +114,5 @@ class FactoryNode(Node):
 
     def deserialize(self, data, hashmap={}, restore_id=True):
         pass
-
-        # res = super().deserialize(data, hashmap)
-        # try:
-        #     value = data['value']
-        #     self.edit.setText(value)
-        #     return True & res
-        # except Exception as e:
-        #     dumpException(e)
-        # return res
-
 
 

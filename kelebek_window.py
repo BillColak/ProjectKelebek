@@ -18,7 +18,7 @@ from nodeeditor.utils import dumpException, pp
 # Enabling edge validators
 from nodeeditor.node_edge import Edge
 from nodeeditor.node_edge_validators import *
-Edge.registerEdgeValidator(edge_validator_debug)
+# Edge.registerEdgeValidator(edge_validator_debug)
 Edge.registerEdgeValidator(edge_cannot_connect_two_outputs_or_two_inputs)
 Edge.registerEdgeValidator(edge_cannot_connect_input_and_output_of_same_node)
 

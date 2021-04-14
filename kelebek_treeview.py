@@ -21,9 +21,6 @@ Loco = {'Canada': {
 
 class SearchProxyModel(QSortFilterProxyModel):
 
-    # https://stackoverflow.com/questions/47746180/single-column-qtreeview-search-filter
-    # TODO show descendant of row when parent is searched
-
     def __init__(self, parent=None):
         super(SearchProxyModel, self).__init__(parent)
         self.text = ''
@@ -55,6 +52,7 @@ class SearchProxyModel(QSortFilterProxyModel):
 
 
 class KelebekTreeView(QTreeView):
+
     customMimeType = "application/x-customqstandarditemmodeldatalist"
     clickedTag = pyqtSignal(list)
 
@@ -134,40 +132,10 @@ class KelebekTreeView(QTreeView):
 
             drag = QDrag(self)
             drag.setMimeData(mimeData)
-            drag.setHotSpot(QPoint(pixmap.width() / 2, pixmap.height() / 2))
+            drag.setHotSpot(QPoint(int(pixmap.width() / 2), int(pixmap.height() / 2)))
             drag.setPixmap(pixmap)
 
             drag.exec_(Qt.MoveAction)
 
         except Exception as e:
             dumpException(e)
-
-    # def addItems(self, parent, values):
-    #     if isinstance(values, dict):
-    #         for key, value in values.items():
-    #             # item = StandardItem(key, 'tree_images/info-circle-fill.svg', color=self.font_color)
-    #             item = StandardItem(key, 'tree_images/info-circle-fill.svg')
-    #             parent.appendRow(item)
-    #             self.addItems(item, value)
-    #     else:
-    #         for value in values:
-    #             if isinstance(value, str):
-    #                 # item = StandardItem(value, 'tree_images/info-circle-fill.svg', 10, color=self.font_color)
-    #                 item = StandardItem(value, 'tree_images/info-circle-fill.svg', 10)
-    #                 parent.appendRow(item)
-
-    # def addItems(self, parent, values):
-    #     if isinstance(values, dict):
-    #         for key, value in values.items():
-    #             item = QStandardItem(QIcon('tree_images/info-circle-fill.svg'), key)
-    #             item.setToolTip('This is a treeview item tooltip')
-    #             item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
-    #             parent.appendRow(item)
-    #             self.addItems(item, value)
-    #     else:
-    #         for value in values:
-    #             if isinstance(value, str):
-    #                 item = QStandardItem(QIcon('tree_images/info-circle-fill.svg'), value)
-    #                 item.setToolTip('This is a treeview item tooltip')
-    #                 item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled)
-    #                 parent.appendRow(item)

@@ -46,9 +46,8 @@ class ResizableNode(QGraphicsObject):
         for output_socket in self.node.outputs:
             top_offset = self.title_height + 2 * self.title_vertical_padding + self.edge_padding
             available_height = s.height() - top_offset
-            y = top_offset + available_height / 2.0 + (output_socket.index-0.5) * self.node.socket_spacing
+            y = top_offset + available_height / 2.0 + (output_socket.socket_index-0.5) * self.node.socket_spacing
             output_socket.grSocket.setPos(s.width()+1, y)
-            # print(s.width()+1, y)
 
         for input_socket in self.node.inputs:
 
@@ -56,18 +55,22 @@ class ResizableNode(QGraphicsObject):
                 y = s.height() - self.edge_roundness - self.title_vertical_padding - input_socket.index * self.node.socket_spacing
             elif input_socket.position in (LEFT_CENTER, RIGHT_CENTER):
                 num_sockets = input_socket.count_on_this_node_side
+                # num_sockets = len(self.node.inputs)
                 node_height = s.height()
                 top_offset = self.title_height + 2 * self.title_vertical_padding + self.edge_padding
                 available_height = node_height - top_offset
-                y = top_offset + available_height / 2.0 + (input_socket.index - 0.5) * self.node.socket_spacing
+                y = top_offset + available_height / 2.0 + (input_socket.socket_index - 0.5) * self.node.socket_spacing
                 if num_sockets > 1:
                     y -= self.node.socket_spacing * (num_sockets - 1) / 2
             elif input_socket.position in (LEFT_TOP, RIGHT_TOP):
 
-                y = self.title_height + self.title_vertical_padding + self.edge_roundness + input_socket.index * self.node.socket_spacing
+                y = self.title_height + self.title_vertical_padding + self.edge_roundness + input_socket.socket_index * self.node.socket_spacing
             else:
                 y = 0
             input_socket.grSocket.setPos(-1, y)
+
+    def adjust_socket_pos(self):
+        self.move_sockets(self.rect)
 
     def changeTitleColor(self, color):
         self.brush_title = str(color)
@@ -117,7 +120,7 @@ class ResizableNode(QGraphicsObject):
         self.width = self.rect.width()  # todo get rid of these when have a chance
         self.height = self.rect.height()
         self.edge_roundness = 10.0
-        self.edge_padding = 0
+        self.edge_padding = 10
         self.title_height = 24.0
         self.title_horizontal_padding = 4.0
         self.title_vertical_padding = 4.0
@@ -165,24 +168,9 @@ class ResizableNode(QGraphicsObject):
             - 2 * self.title_horizontal_padding
         )
 
-
-    def onSelected(self):
-        """Our event handling when the node was selected"""
-        self.node.scene.grScene.itemSelected.emit()
-
-    def doSelect(self, new_state=True):
-        """Safe version of selecting the `Graphics Node`. Takes care about the selection state flag used internally
-
-        :param new_state: ``True`` to select, ``False`` to deselect
-        :type new_state: ``bool``
-        """
-        self.setSelected(new_state)
-        self._last_selected_state = new_state
-        if new_state: self.onSelected()
-
     def corner_rect(self) -> QRect:
         """ Return corner rect geometry """
-        return QRect(self.rect.right() - 10, self.rect.bottom() - 10, 10, 10)
+        return QRect(self.rect.right() - 20, self.rect.bottom() - 20, 20, 20)
 
     def boundingRect(self) -> QRectF:
         """ Override boundingRect """
@@ -216,7 +204,8 @@ class ResizableNode(QGraphicsObject):
 
         # outline
         path_outline = QPainterPath()
-        path_outline.addRoundedRect(QRectF(self.rect), 10, 10)
+        # path_outline.addRoundedRect(QRectF(self.rect), 10, 10)
+        path_outline.addRoundedRect(-1, -1, self.rect.width()+2, self.rect.height()+2, self.edge_roundness, self.edge_roundness)
         painter.setBrush(Qt.NoBrush)
         if self.hovered:
             painter.setPen(self._pen_hovered)
@@ -226,6 +215,20 @@ class ResizableNode(QGraphicsObject):
         else:
             painter.setPen(self._pen_default if not self.isSelected() else self._pen_selected)
             painter.drawPath(path_outline.simplified())
+
+        triangle_path = QPainterPath()
+        triangle_path.moveTo(self.corner_rect().right(), self.corner_rect().top())
+        triangle_path.lineTo(self.corner_rect().bottomRight())
+        triangle_path.lineTo(self.corner_rect().bottomLeft())
+        triangle_path.lineTo(self.corner_rect().right(), self.corner_rect().top())
+
+        if self.isSelected():
+            triBrush = QBrush(QColor(Qt.lightGray))
+            triBrush.setStyle(Qt.Dense6Pattern)
+            painter.setBrush(triBrush)
+            painter.setPen(Qt.NoPen)
+            painter.drawPath(triangle_path.simplified())
+
         self.update()
 
     def hoverMoveEvent(self, event: QMouseEvent):
@@ -256,10 +259,44 @@ class ResizableNode(QGraphicsObject):
         else:
             super().mousePressEvent(event)
 
+    def onSelected(self):
+        """Our event handling when the node was selected"""
+        self.node.scene.grScene.itemSelected.emit()
+
+    def doSelect(self, new_state=True):
+        """Safe version of selecting the `Graphics Node`. Takes care about the selection state flag used internally
+
+        :param new_state: ``True`` to select, ``False`` to deselect
+        :type new_state: ``bool``
+        """
+        self.setSelected(new_state)
+        self._last_selected_state = new_state
+        if new_state: self.onSelected()
+
     def mouseReleaseEvent(self, event: QMouseEvent):
         """ Override mouse release event """
         self.moving = False
         super().mouseReleaseEvent(event)
+
+        # handle when grNode moved
+        if self._was_moved:
+            self._was_moved = False
+            self.node.scene.history.storeHistory("Node moved", setModified=True)
+
+            self.node.scene.resetLastSelectedStates()
+            self.doSelect()     # also trigger itemSelected when node was moved
+
+            # we need to store the last selected state, because moving does also select the nodes
+            self.node.scene._last_selected_items = self.node.scene.getSelectedItems()
+
+            # now we want to skip storing selection
+            return
+
+        # handle when grNode was clicked on
+        if self._last_selected_state != self.isSelected() or self.node.scene._last_selected_items != self.node.scene.getSelectedItems():
+            self.node.scene.resetLastSelectedStates()
+            self._last_selected_state = self.isSelected()
+            self.onSelected()
 
     def mouseMoveEvent(self, event: QMouseEvent):
         """ Override mouse move event """
@@ -284,3 +321,9 @@ class ResizableNode(QGraphicsObject):
             return
         else:
             super().mouseMoveEvent(event)
+
+        # optimize me! just update the selected nodes
+        for node in self.scene().scene.nodes:
+            if node.grNode.isSelected():
+                node.updateConnectedEdges()
+        self._was_moved = True

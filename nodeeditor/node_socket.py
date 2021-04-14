@@ -8,7 +8,7 @@ from nodeeditor.node_graphics_socket import QDMGraphicsSocket
 
 
 LEFT_TOP = 1        #:
-LEFT_CENTER =2      #:
+LEFT_CENTER = 2     #:
 LEFT_BOTTOM = 3     #:
 RIGHT_TOP = 4       #:
 RIGHT_CENTER = 5    #:
@@ -24,7 +24,7 @@ class Socket(Serializable):
 
     """Class representing Socket."""
 
-    def __init__(self, node:'Node', index:int=0, position:int=LEFT_TOP, socket_type:int=1, multi_edges:bool=True, count_on_this_node_side:int=1, is_input:bool=False, name='name undefined'):
+    def __init__(self, node:'Node', index:int=0, position:int=LEFT_TOP, socket_type:int=1, multi_edges:bool=True, count_on_this_node_side:int=1, is_input:bool=False, name=''):
         """
         :param node: reference to the :class:`~nodeeditor.node_node.Node` containing this `Socket`
         :type node: :class:`~nodeeditor.node_node.Node`
@@ -58,15 +58,16 @@ class Socket(Serializable):
 
         self.node = node
         self.position = position
-        self.index = index
+        # self._index = index
         self.socket_type = socket_type
-        self.count_on_this_node_side = count_on_this_node_side
+        # self._count_on_this_node_side = count_on_this_node_side
         self.is_multi_edges = multi_edges
         self.is_input = is_input
         self.is_output = not self.is_input
 
+        # print('pos:', self.position, 'index', self.index, 'count', self.count_on_this_node_side, self.name)
 
-        if DEBUG: print("Socket -- creating with", self.index, self.position, "for nodeeditor", self.node)
+        # if DEBUG: print("Socket -- creating with", self.index, self.position, "for nodeeditor", self.node)
 
         self.grSocket = self.__class__.Socket_GR_Class(self, name=self.name, is_input=is_input)
 
@@ -76,13 +77,40 @@ class Socket(Serializable):
 
     def __str__(self):
         return "<Socket #%d %s %s..%s>" % (
-            self.index, "ME" if self.is_multi_edges else "SE", hex(id(self))[2:5], hex(id(self))[-3:]
+            self.socket_index, "ME" if self.is_multi_edges else "SE", hex(id(self))[2:5], hex(id(self))[-3:]
         )
+
+    @property
+    def count_on_this_node_side(self):
+        if self.is_input:
+            return len(self.node.inputs)
+        else:
+            return len(self.node.outputs)
+
+    @property
+    def socket_index(self):
+        if self.is_input:
+            if self.node.inputs:
+                if self in self.node.inputs:
+                    return self.node.inputs.index(self)
+                else:
+                    return len(self.node.inputs)
+            else:
+                return 0
+        else:
+            if self.node.outputs:
+                if self in self.node.outputs:
+                    return self.node.outputs.index(self)
+                else:
+                    return len(self.node.inputs)
+            else:
+                return 0
 
     def delete(self):
         """Delete this `Socket` from graphics scene for sure"""
         self.grSocket.setParentItem(None)
         self.node.scene.grScene.removeItem(self.grSocket)
+        self.removeAllEdges()
         del self.grSocket
 
     def changeSocketType(self, new_socket_type:int) -> bool:
@@ -103,7 +131,7 @@ class Socket(Serializable):
     def setSocketPosition(self):
         """Helper function to set `Graphics Socket` position. Exact socket position is calculated
         inside :class:`~nodeeditor.node_node.Node`."""
-        self.grSocket.setPos(*self.node.getSocketPosition(self.index, self.position, self.count_on_this_node_side))
+        self.grSocket.setPos(*self.node.getSocketPosition(self.socket_index, self.position, self.count_on_this_node_side))
 
     def getSocketPosition(self):
         """
@@ -111,8 +139,8 @@ class Socket(Serializable):
             :class:`~nodeeditor.node_node.Node`
         :rtype: ``x, y`` position
         """
-        if DEBUG: print("  GSP: ", self.index, self.position, "nodeeditor:", self.node)
-        res = self.node.getSocketPosition(self.index, self.position, self.count_on_this_node_side)
+        if DEBUG: print("  GSP: ", self.socket_index, self.position, "nodeeditor:", self.node)
+        res = self.node.getSocketPosition(self.socket_index, self.position, self.count_on_this_node_side)
         if DEBUG: print("  res", res)
         return res
 
@@ -186,7 +214,7 @@ class Socket(Serializable):
     def serialize(self) -> OrderedDict:
         return OrderedDict([
             ('id', self.id),
-            ('index', self.index),
+            ('index', self.socket_index),
             ('multi_edges', self.is_multi_edges),
             ('position', self.position),
             ('socket_type', self.socket_type),

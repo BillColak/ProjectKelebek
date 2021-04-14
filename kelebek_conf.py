@@ -14,6 +14,7 @@ OP_NODE_HOP_ALL_LINKS = 8
 OP_NODE_SINGLE_ITEM = 9
 OP_NODE_MULTI_ITEM = 10
 OP_NODE_DISPLAY_OUTPUT = 11
+CUSTOM_NODE = 12
 
 KELEBEK_NODES = {
 }
@@ -28,9 +29,6 @@ KELEBEK_NODES2 = {'Web Navigation': {},
                   }
 
 
-# TODO Node Classes: Web Navigation. Item Extraction. Display(Item/Web)
-
-
 class ConfException(Exception): pass
 class InvalidNodeRegistration(ConfException): pass
 class OpCodeNotRegistered(ConfException): pass
@@ -42,6 +40,7 @@ def register_node_now(op_code, class_reference):
             op_code, KELEBEK_NODES[op_code]
         ))
     KELEBEK_NODES[op_code] = class_reference
+    print(op_code, class_reference)
 
 
 def register_node(op_code):
@@ -69,6 +68,7 @@ def register_node_now2(op_code, parent, class_reference):
         ))
     category[op_code] = class_reference
     KELEBEK_NODES[op_code] = class_reference
+    print(op_code, class_reference.op_code)
 
 
 def register_node2(op_code, parent):

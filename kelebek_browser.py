@@ -141,7 +141,7 @@ class QtBrowserWidget(QtWidgets.QWidget):
         self.browser.urlChanged.connect(self.update_urlbar)
         # self.browser.loadFinished.connect(self.update_title)
         profile = self.page.profile().httpUserAgent()
-        print('page profile: ', profile)
+        # print('page profile: ', profile)
 
         # BROWSER NAVIGATION BAR
         self.browsernavbar = QtWidgets.QWidget()
@@ -210,7 +210,7 @@ class QtBrowserWidget(QtWidgets.QWidget):
         }
 
         self.browser.value = node_input
-        print('BROWSER VALUE: ', self.browser.value)
+        if DEBUG: print('BROWSER VALUE: ', self.browser.value)
 
     def inspect_element(self):
         if self.page.onLoadFinished:
@@ -235,7 +235,7 @@ class QuteBrowser(QWebEngineView):
         self.value = None
 
         self.scene = None
-        print('SELF.SCENE: ', self.scene)
+        # print('SELF.SCENE: ', self.scene)
 
         self.initNewNodeActions()
 

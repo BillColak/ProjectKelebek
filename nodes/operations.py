@@ -261,13 +261,14 @@ class KelebekTestNode(KelebekNode):
         self.eval()
 
     def evalOperation(self, *args):
-        for arg in args:
-            if isinstance(arg, Future):
-                arg = arg.result()
-            print(Fore.GREEN, 'ARG LENGTH: ', len(arg))
-            print(Fore.GREEN, 'ARG: ', arg)
-        x = [i for i in args]
-        return x
+        print(Fore.GREEN, 'TEST NODE ARGS: ', args)
+        # for arg in args:
+        #     if isinstance(arg, Future):
+        #         arg = arg.result()
+        #     print(Fore.GREEN, 'ARG LENGTH: ', len(arg))
+        #     print(Fore.GREEN, 'ARG: ', arg)
+        # x = [i for i in args]
+        # return x
 
     def evalImplementation(self):
         all_inputs_nodes = self.getInputs()

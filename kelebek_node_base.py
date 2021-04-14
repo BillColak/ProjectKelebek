@@ -177,7 +177,8 @@ class KelebekNode(Node):
                 return self.fut
 
     def eval(self):
-        print(Fore.YELLOW, '--> Eval Caller Name:', inspect.stack()[1][3], ', Node Name:', self)
+        if DEBUG:
+            print(Fore.YELLOW, '--> Eval Caller Name:', inspect.stack()[1][3], ', Node Name:', self)
         if not self.isDirty() and not self.isInvalid():
             if DEBUG:
                 print(Fore.MAGENTA, " _> returning cached %s value:" % self.__class__.__name__, self.value, flush=True)
@@ -201,12 +202,6 @@ class KelebekNode(Node):
             print(Fore.BLUE, "%s::__onInputChanged" % self.__class__.__name__, 'Socket: ', socket)
         self.markDirty()
         self.eval()
-
-    # def onMarkedDirty(self):
-    #     pass  # could wait for future here
-    #
-    # def onMarkedInvalid(self):
-    #     pass
 
     def serialize(self):
         res = super().serialize()

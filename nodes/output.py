@@ -35,6 +35,7 @@ class KelebekNodeStore(KelebekNode):
     op_code = OP_NODE_STORE
     op_title = "Store Output"
     content_label_objname = "kelebek_node_store"
+    category = "Output"
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[1], outputs=[])

@@ -222,7 +222,6 @@ class Node(Serializable):
                 return True
         return False
 
-
     def getSocketPosition(self, index: int, position: int, num_out_of: int=1) -> '(x, y)':
         """
         Get the relative `x, y` position of a :class:`~nodeeditor.node_socket.Socket`. This is used for placing
@@ -282,7 +281,11 @@ class Node(Serializable):
         :return: (x, y) Socket's scene position
         """
         nodepos = self.grNode.pos()
-        socketpos = self.getSocketPosition(socket.index, socket.position, socket.count_on_this_node_side)
+        if socket.is_input:
+            count_on_this_node_side = len(self.inputs)
+        else:
+            count_on_this_node_side = len(self.outputs)
+        socketpos = self.getSocketPosition(socket.index, socket.position, count_on_this_node_side)
         return (nodepos.x() + socketpos[0], nodepos.y() + socketpos[1])
 
     def updateConnectedEdges(self):

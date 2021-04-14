@@ -6,60 +6,33 @@ from PyQt5.QtGui import *
 
 from nodeeditor.node_scene import Scene
 from nodeeditor.node_graphics_view import QDMGraphicsView
-# from nodeeditor.node_graphics_scene import QDMGraphicsScene
-# from kelebek_node_base import KelebekNode
+from nodeeditor.node_graphics_scene import QDMGraphicsScene
+
 from kelebek_factory_node import FactoryNode
 from kelebek_texteditor import KelebekSyntaxHighlighter
 from kelebek_factory_sockets import FactorySocketHandler
 from kelebek_factory_options import FactoryNodeOptions
 
 
-class FactoryGraphicsScene(QGraphicsScene):
-    """Class representing Graphic of :class:`~nodeeditor.node_scene.Scene`"""
+from kelebek_conf import get_class_from_opcode, dumpException
+DEBUG = False
+LISTBOX_MIMETYPE = "application/x-item"
 
-    #: pyqtSignal emitted when some item is selected in the `Scene`
-    itemSelected = pyqtSignal()
 
-    #: pyqtSignal emitted when items are deselected in the `Scene`
-    itemsDeselected = pyqtSignal()
-
-    def __init__(self, scene:'Scene', parent:QWidget=None):
-        """
-        :param scene: reference to the :class:`~nodeeditor.node_scene.Scene`
-        :type scene: :class:`~nodeeditor.node_scene.Scene`
-        :param parent: parent widget
-        :type parent: QWidget
-        """
-        super().__init__(parent)
-
-        self.scene = scene
-        self.setItemIndexMethod(QGraphicsScene.NoIndex)
-
-        # settings
-        self.gridSize = 20
-        self.gridSquares = 5
-
-        self.initAssets()
-        self.setBackgroundBrush(self._color_background)
+class FactoryGraphicsScene(QDMGraphicsScene):
+    def __init__(self, scene: 'Scene', parent: QWidget = None):
+        super().__init__(scene, parent)
 
     def initAssets(self):
-        """Initialize ``QObjects`` like ``QColor``, ``QPen`` and ``QBrush``"""
         self._color_background = QColor("#A0A0A0")
         self._font_state = QFont("Ubuntu", 16)
         self._font_state.setStyleStrategy(QFont.PreferAntialias)
 
-    # the drag events won't be allowed until dragMoveEvent is overriden
-    def dragMoveEvent(self, event):
-        """Overriden Qt's dragMoveEvent to enable Qt's Drag Events"""
-        pass
-
-    def setGrScene(self, width:int, height:int):
-        """Set `width` and `height` of the `Graphics Scene`"""
+    def setGrScene(self, width: int, height: int):
         self.setSceneRect(-width // 2, -height // 2, width, height)
 
-    def drawBackground(self, painter:QPainter, rect:QRect):
-        """Draw background scene grid"""
-        super().drawBackground(painter, rect)
+    def drawBackground(self, painter: QPainter, rect: QRect):
+        QGraphicsScene.drawBackground(self, painter, rect)
 
 
 class FactoryScene(Scene):
@@ -68,7 +41,6 @@ class FactoryScene(Scene):
         super(FactoryScene, self).__init__()
 
     def initUI(self):
-        """Set up Graphics Scene Instance with FactoryGraphicsScene instead"""
         self.grScene = FactoryGraphicsScene(self)
         self.grScene.setGrScene(self.scene_width, self.scene_height)
 
@@ -76,7 +48,6 @@ class FactoryScene(Scene):
 class FactoryView(QWidget):
 
     def __init__(self, parent=None):
-
         super(FactoryView, self).__init__(parent)
 
         self.layout = QVBoxLayout(self)
@@ -92,6 +63,7 @@ class FactoryView(QWidget):
         self.node = FactoryNode(self.scene)
 
         sockethandler = FactorySocketHandler(self.node)
+        sockethandler.socket_added.connect(self.node.grNode.adjust_socket_pos)
         highlighter = KelebekSyntaxHighlighter(sockethandler)
         options = FactoryNodeOptions(self.node)
 
@@ -99,12 +71,17 @@ class FactoryView(QWidget):
         splitter2.addWidget(options)
         splitter2.addWidget(highlighter)
         splitter2.addWidget(sockethandler)
-        splitter2.saveGeometry()
+        splitter2.setStretchFactor(0, 1)
+        splitter2.setStretchFactor(1, 4)
+        splitter2.setStretchFactor(2, 10)
         splitter1.addWidget(splitter2)
 
         self.layout.addWidget(splitter1)
         highlighter.save_signal.connect(self.saveNode)
         highlighter.emit_eval.connect(self.saveNode)
+
+        self.scene.addDragEnterListener(self.onDragEnter)
+        self.scene.addDropListener(self.onDrop)
 
     def eval_text(self, s):
         try:
@@ -127,3 +104,35 @@ class FactoryView(QWidget):
         else:
             with open(new_node, 'w') as file:
                 file.write(json.dumps(ser_node, indent=4))
+
+    def onDragEnter(self, event: QDragEnterEvent):
+        if event.mimeData().hasFormat(LISTBOX_MIMETYPE):
+            event.acceptProposedAction()
+        else:
+            event.setAccepted(False)
+
+    def onDrop(self, event):
+        if event.mimeData().hasFormat(LISTBOX_MIMETYPE):
+            eventData = event.mimeData().data(LISTBOX_MIMETYPE)
+            dataStream = QDataStream(eventData, QIODevice.ReadOnly)
+            pixmap = QPixmap()
+            dataStream >> pixmap
+            op_code = dataStream.readInt()
+            text = dataStream.readQString()
+
+            mouse_position = event.pos()
+            scene_position = self.grScene.views()[0].mapToScene(mouse_position)
+
+            if DEBUG: print("GOT DROP: [%d] '%s'" % (op_code, text), "mouse:", mouse_position, "scene:", scene_position)
+
+            try:
+                node = get_class_from_opcode(op_code)(self.scene)
+                node.setPos(scene_position.x(), scene_position.y())
+                # self.history.storeHistory("Created node %s" % node.__class__.__name__)
+            except Exception as e: dumpException(e)
+
+            event.setDropAction(Qt.MoveAction)
+            event.accept()
+        else:
+            print(" ... drop ignored, not requested format '%s'" % LISTBOX_MIMETYPE)
+            event.ignore()

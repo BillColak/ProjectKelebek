@@ -170,6 +170,9 @@ class FactoryNodeOpTextEdit(QTextEdit):
 
         self.highlighter = MyHighlighter(self)
 
+        self.setPlaceholderText('tip: hold ctrl+left clicked and drag your mouse over the edges to cut connections. \n'
+                                'tip: click+hold the mouse scroll wheel to move the scene.')
+
     def s_highlight(self):
         return self.highlighter
 
@@ -185,6 +188,8 @@ class KelebekSyntaxHighlighter(QWidget):
 
     def __init__(self, socket_handler, parent: QWidget = None):
         super().__init__(parent)
+
+        self.unique = set()
 
         self.socket_handler = socket_handler
         self.setLayout(QVBoxLayout())
@@ -206,17 +211,19 @@ class KelebekSyntaxHighlighter(QWidget):
         btn_lay.addWidget(self.save_node)
 
     def addSyntax(self):
+        # don't use this method for larger applications, as previous syntax is not removed.
         for k, v in self.socket_handler.getSocketsNameType():
-            keyword = QTextCharFormat()
-            brush = QBrush(QColor(v), Qt.SolidPattern)
-            keyword.setForeground(brush)
-            keyword.setFontWeight(QFont.Bold)
+            if k:
+                keyword = QTextCharFormat()
+                brush = QBrush(QColor(v), Qt.SolidPattern)
+                keyword.setForeground(brush)
+                keyword.setFontWeight(QFont.Bold)
 
-            pattern = QRegExp("\\b" + k + "\\b")
-            rule = HighlightingRule(pattern, keyword)
-            highlighter = self.textEdit.s_highlight()
-            highlighter.highlightingRules.append(rule)
-            highlighter.rehighlight()
+                pattern = QRegExp("\\b" + k + "\\b")
+                rule = HighlightingRule(pattern, keyword)
+                highlighter = self.textEdit.s_highlight()
+                highlighter.highlightingRules.append(rule)
+                highlighter.rehighlight()
 
     def saveNodeSignal(self):
         text = self.textEdit.toPlainText()

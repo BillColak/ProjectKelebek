@@ -9,59 +9,41 @@ class FactoryNodeOptions(QWidget):
         super().__init__(parent)
         self.node = node
         self.setLayout(QFormLayout())
-        self.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(0, 0, 0, 0)
 
-        self.combo = QComboBox()
-        self.combo.addItems(['rounded rectangle', 'cloud', 'circle', 'diamond', 'triangle'])
+        # self.combo = QComboBox()
+        # self.combo.addItems(['rounded rectangle', 'cloud', 'circle', 'diamond', 'triangle'])
+        #
+        # self.socket_posCombo = QComboBox()
+        # self.socket_posCombo.addItems(['LEFT_TOP', 'LEFT_CENTER', 'LEFT_BOTTOM'])
 
-        self.operation = QLineEdit()
-        self.operation.setPlaceholderText('type.. wanted node operation.')
+        # self.node_color = QColorButton('Node Color')
+        # self.node_color.colorChanged.connect(self.change_nodecolor)
 
-        # self.socketspinbox = QSpinBox()
-        # self.socketspinbox.textChanged.connect(self.socket_amount)
-
-        self.socket_pos = QPushButton('Output Socket')
-        self.socket_pos.clicked.connect(self.socket_position)
-
-        self.socket_posCombo = QComboBox()
-        self.socket_posCombo.addItems(['LEFT_TOP', 'LEFT_CENTER', 'LEFT_BOTTOM'])
-
-        self.node_title = QLineEdit('Name Super Undefined')
+        self.node_title = QLineEdit('Undefined')
         self.node_title.textChanged.connect(self.setNodeTitle)
 
-        self.node_color = QColorButton('Node Color')
-        self.node_color.colorChanged.connect(self.change_nodecolor)
+        self.node_shape = QLineEdit()
+        self.category = QLineEdit()
+        self.tool_tip = QLineEdit()
+        self.node_color = QLineEdit()
 
-        # TODO  all these options should be lineedits with editorfactory enabled changing the editor widget on click. to keep the look consistent.
         form_fields = {
             'Title:': self.node_title,
-            'Shape:': self.combo,
-            # 'Sockets:': self.socketspinbox,
-            'Socket Position': self.socket_posCombo,  # --> is this really nessacary
-            'Category': QLineEdit(),  # --> treeview
-            # 'Sub Category (Optional)': self.socket_pos,
-            'Tooltip': QLineEdit('Enter node tooltip'),  # --> for treeview only
+            'Shape:': self.node_shape,
+            'Category': self.category,
+            'Tooltip': self.tool_tip,
             'node color': self.node_color,
         }
         for k, v in form_fields.items():
             self.layout().addRow(k, v)
 
-    def socket_position(self):
-        for socket in self.node.outputs:
-            x, y = self.node.getSocketPosition(socket.index, socket.position, socket.count_on_this_node_side)
-            print(x, y)
-
-    # def socket_amount(self, s):
-    #     x = [1 for i in range(int(s))]
-    #     print(x)
-    #     self.node.initSockets(x, [0], reset=False)  # make the rest false to append sockets vs remaking.
-
     def setNodeTitle(self, s):
-        self.node.grNode.setTitle(s)
+        self.node.title = s
+        # self.node.grNode.setTitle(s)
 
     def change_nodecolor(self, s):
         self.node.grNode.changeTitleColor(s)
-
 
 
 class QColorButton(QPushButton):
