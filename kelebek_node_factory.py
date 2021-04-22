@@ -7,16 +7,18 @@ from PyQt5.QtGui import *
 from nodeeditor.node_scene import Scene
 from nodeeditor.node_graphics_view import QDMGraphicsView
 from nodeeditor.node_graphics_scene import QDMGraphicsScene
+from nodeeditor.utils import dumpException
 
 from kelebek_factory_node import FactoryNode
 from kelebek_texteditor import KelebekSyntaxHighlighter
 from kelebek_factory_sockets import FactorySocketHandler
 from kelebek_factory_options import FactoryNodeOptions
 
-
-from kelebek_conf import get_class_from_opcode, dumpException
+from kelebek_conf import get_class_from_opcode
 DEBUG = False
 LISTBOX_MIMETYPE = "application/x-item"
+
+#  todo shape editor: for future ->  https://doc.qt.io/qt-5/qgraphicsitemgroup.html
 
 
 class FactoryGraphicsScene(QDMGraphicsScene):

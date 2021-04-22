@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 from nodeeditor.node_node import Node
 
 LEFT_TOP = 1        #:
-LEFT_CENTER =2      #:
+LEFT_CENTER = 2      #:
 LEFT_BOTTOM = 3     #:
 RIGHT_TOP = 4       #:
 RIGHT_CENTER = 5    #:
@@ -55,7 +55,6 @@ class ResizableNode(QGraphicsObject):
                 y = s.height() - self.edge_roundness - self.title_vertical_padding - input_socket.index * self.node.socket_spacing
             elif input_socket.position in (LEFT_CENTER, RIGHT_CENTER):
                 num_sockets = input_socket.count_on_this_node_side
-                # num_sockets = len(self.node.inputs)
                 node_height = s.height()
                 top_offset = self.title_height + 2 * self.title_vertical_padding + self.edge_padding
                 available_height = node_height - top_offset
@@ -170,7 +169,7 @@ class ResizableNode(QGraphicsObject):
 
     def corner_rect(self) -> QRect:
         """ Return corner rect geometry """
-        return QRect(self.rect.right() - 20, self.rect.bottom() - 20, 20, 20)
+        return QRect(self.rect.right() - 20, self.rect.bottom() - 20+2, 20, 20)
 
     def boundingRect(self) -> QRectF:
         """ Override boundingRect """

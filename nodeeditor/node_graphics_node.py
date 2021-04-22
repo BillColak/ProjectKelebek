@@ -6,6 +6,13 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
+LEFT_TOP = 1        #:
+LEFT_CENTER = 2      #:
+LEFT_BOTTOM = 3     #:
+RIGHT_TOP = 4       #:
+RIGHT_CENTER = 5    #:
+RIGHT_BOTTOM = 6    #:
+
 
 class QDMGraphicsNode(QGraphicsItem):
     """Class describing Graphics representation of :class:`~nodeeditor.node_node.Node`"""
@@ -91,7 +98,10 @@ class QDMGraphicsNode(QGraphicsItem):
         self._pen_hovered = QPen(self._color_hovered)
         self._pen_hovered.setWidthF(3.0)
 
-        self._brush_title = QBrush(QColor("#FF313131"))
+        if hasattr(self.node, 'color'):
+            self._brush_title = QBrush(QColor(str(self.node.color)))
+        else:
+            self._brush_title = QBrush(QColor("#FF313131"))
         self._brush_background = QBrush(QColor("#E3212121"))
 
     def onSelected(self):
@@ -156,7 +166,6 @@ class QDMGraphicsNode(QGraphicsItem):
         self.hovered = False
         self.update()
 
-
     def boundingRect(self) -> QRectF:
         """Defining Qt' bounding rectangle"""
         return QRectF(
@@ -165,7 +174,6 @@ class QDMGraphicsNode(QGraphicsItem):
             self.width,
             self.height
         ).normalized()
-
 
     def initTitle(self):
         """Set up the title Graphics representation: font, color, position, etc."""
@@ -190,6 +198,32 @@ class QDMGraphicsNode(QGraphicsItem):
         self.grContent.node = self.node
         self.grContent.setParentItem(self)
 
+    def move_sockets(self):
+        s = self.boundingRect()
+        for output_socket in self.node.outputs:
+            top_offset = self.title_height + 2 * self.title_vertical_padding + self.edge_padding
+            available_height = s.height() - top_offset
+            y = top_offset + available_height / 2.0 + (output_socket.socket_index-0.5) * self.node.socket_spacing
+            output_socket.grSocket.setPos(s.width()+1, y)
+
+        for input_socket in self.node.inputs:
+
+            if input_socket.position in (LEFT_BOTTOM, RIGHT_BOTTOM):
+                y = s.height() - self.edge_roundness - self.title_vertical_padding - input_socket.index * self.node.socket_spacing
+            elif input_socket.position in (LEFT_CENTER, RIGHT_CENTER):
+                num_sockets = input_socket.count_on_this_node_side
+                node_height = s.height()
+                top_offset = self.title_height + 2 * self.title_vertical_padding + self.edge_padding
+                available_height = node_height - top_offset
+                y = top_offset + available_height / 2.0 + (input_socket.socket_index - 0.5) * self.node.socket_spacing
+                if num_sockets > 1:
+                    y -= self.node.socket_spacing * (num_sockets - 1) / 2
+            elif input_socket.position in (LEFT_TOP, RIGHT_TOP):
+
+                y = self.title_height + self.title_vertical_padding + self.edge_roundness + input_socket.socket_index * self.node.socket_spacing
+            else:
+                y = 0
+            input_socket.grSocket.setPos(-1, y)
 
     def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
         """Painting the rounded rectanglar `Node`"""

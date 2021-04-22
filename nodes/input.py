@@ -1,22 +1,18 @@
 
 from PyQt5.QtCore import *
-from kelebek_conf import *
+from kelebek_conf import register_node
 from kelebek_node_base import *
-# from nodeeditor.utils import dumpException
 
-# import time
 import requests
-# from colorama import Fore
-# from collections import deque
-# from kelebek_multithreading import run_threaded_process, DEFAULT_STYLE, COMPLETED_STYLE
 
 
-@register_node2(OP_NODE_INPUT, 'Web Navigation')
+@register_node()
 class KelebekNodeInput(KelebekNode):
     # icon = "icons/in.png"
-    op_code = OP_NODE_INPUT
+    op_code = 1
     op_title = "Start"
     content_label_objname = "Start_input_node"
+    category = "Web Navigation"
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[], outputs=[1])

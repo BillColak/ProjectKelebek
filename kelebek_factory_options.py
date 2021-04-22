@@ -17,8 +17,8 @@ class FactoryNodeOptions(QWidget):
         # self.socket_posCombo = QComboBox()
         # self.socket_posCombo.addItems(['LEFT_TOP', 'LEFT_CENTER', 'LEFT_BOTTOM'])
 
-        # self.node_color = QColorButton('Node Color')
-        # self.node_color.colorChanged.connect(self.change_nodecolor)
+        self.node_color = QColorButton('Node Color')
+        self.node_color.colorChanged.connect(self.change_nodecolor)
 
         self.node_title = QLineEdit('Undefined')
         self.node_title.textChanged.connect(self.setNodeTitle)
@@ -26,7 +26,7 @@ class FactoryNodeOptions(QWidget):
         self.node_shape = QLineEdit()
         self.category = QLineEdit()
         self.tool_tip = QLineEdit()
-        self.node_color = QLineEdit()
+        # self.node_color = QLineEdit()
 
         form_fields = {
             'Title:': self.node_title,
@@ -40,6 +40,7 @@ class FactoryNodeOptions(QWidget):
 
     def setNodeTitle(self, s):
         self.node.title = s
+        # self.node.__class__.op_title = s
         # self.node.grNode.setTitle(s)
 
     def change_nodecolor(self, s):

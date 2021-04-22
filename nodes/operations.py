@@ -1,6 +1,6 @@
 
 from PyQt5.QtCore import *
-from kelebek_conf import *
+from kelebek_conf import register_node
 from kelebek_node_base import *
 # from nodeeditor.utils import dumpException
 
@@ -30,13 +30,15 @@ star_rating = "//*[contains(@class, 'star-rating')]/@class"
 product_description = "//*[@id='product_description']/following-sibling::p/text()"
 
 
-@register_node2(OP_NODE_PAGINATION, 'Web Navigation')
+# @register_node2(OP_NODE_PAGINATION, 'Web Navigation')
+@register_node()
 class KelebekNodePagination(KelebekNode):
     # icon = "icons/add.png"
-    op_code = OP_NODE_PAGINATION
+    op_code = 6
     op_title = "Pagination"
     content_label = ""
     content_label_objname = "Kelebek_node_pagination"
+    category = 'Web Navigation'
 
     def __init__(self, scene):
         super().__init__(scene, inputs=[2], outputs=[1])
@@ -65,13 +67,15 @@ class KelebekNodePagination(KelebekNode):
         return x
 
 
-@register_node2(OP_NODE_HOP_ALL_LINKS, 'Web Navigation')
+# @register_node2(OP_NODE_HOP_ALL_LINKS, 'Web Navigation')
+@register_node()
 class KelebekNodeHopAllLinks(KelebekNode):
     # icon = "icons/divide.png"
-    op_code = OP_NODE_HOP_ALL_LINKS
+    op_code = 8
     op_title = "Hop All Links"
     content_label = ""
     content_label_objname = "Kelebek_hop_all_links"
+    category = 'Web Navigation'
 
     def xpath_operation(self, **kwargs) -> str:
         path = kwargs.get('xpath')
@@ -90,13 +94,15 @@ class KelebekNodeHopAllLinks(KelebekNode):
         return x
 
 
-@register_node2(OP_NODE_HOP_LINK, 'Web Navigation')
+# @register_node2(OP_NODE_HOP_LINK, 'Web Navigation')
+@register_node()
 class KelebekNodeHopLink(KelebekNode):
     # icon = "icons/sub.png"
-    op_code = OP_NODE_HOP_LINK
+    op_code = 7
     op_title = "Hop Link"
     content_label = ""
     content_label_objname = "Kelebek_node_hop_link"
+    category = 'Web Navigation'
 
     def xpath_operation(self, **kwargs) -> str:
         path = kwargs.get('xpath')
@@ -118,13 +124,15 @@ class KelebekNodeHopLink(KelebekNode):
         return items
 
 
-@register_node2(OP_NODE_SINGLE_ITEM, 'Item Extraction')
+# @register_node2(OP_NODE_SINGLE_ITEM, 'Item Extraction')
+@register_node()
 class KelebekNodeSingleItem(KelebekNode):
     # icon = "icons/sub.png"
-    op_code = OP_NODE_SINGLE_ITEM
+    op_code = 9
     op_title = "Get Item"
     content_label = ""
     content_label_objname = "Kelebek_node_single_item"
+    category = 'Item Extraction'
 
     def xpath_operation(self, **kwargs) -> str:
         path = kwargs.get('xpath')
@@ -145,13 +153,15 @@ class KelebekNodeSingleItem(KelebekNode):
         return items
 
 
-@register_node2(OP_NODE_MULTI_ITEM, 'Item Extraction')
+# @register_node2(OP_NODE_MULTI_ITEM, 'Item Extraction')
+@register_node()
 class KelebekNodeMultiItem(KelebekNode):
     # icon = "icons/sub.png"
-    op_code = OP_NODE_MULTI_ITEM
+    op_code = 10
     op_title = "Get All"
     content_label = ""
     content_label_objname = "Kelebek_node_multi_item"
+    category = 'Item Extraction'
 
     def xpath_operation(self, **kwargs) -> str:
         path = kwargs.get('xpath')
@@ -173,13 +183,15 @@ class KelebekNodeMultiItem(KelebekNode):
         return self.get_all_items(input1, value1)
 
 
-@register_node2(OP_NODE_DISPLAY_OUTPUT, 'Web Navigation')
+# @register_node2(OP_NODE_DISPLAY_OUTPUT, 'Web Navigation')
+@register_node()
 class KelebekNodeDisplayOutput(KelebekNode):
     # icon = "icons/sub.png"
-    op_code = OP_NODE_DISPLAY_OUTPUT
+    op_code = 11
     op_title = "Display Output"
     content_label = ""
     content_label_objname = "Kelebek_node_display_output"
+    category = 'Web Navigation'
 
     def initInnerClasses(self):
         self.content = KelebekOutputDisplayContent(self)
@@ -231,16 +243,17 @@ class KelebekNodeDisplayOutput(KelebekNode):
             return val
 
 
-@register_node2(OP_NODE_TEST, 'Finance.Financials')
+@register_node()
 class KelebekTestNode(KelebekNode):
     # icon = "icons/sub.png"
-    op_code = OP_NODE_TEST
+    op_code = 3
     op_title = "Test Node"
     content_label = ""
     content_label_objname = "Kelebek_node_test"
+    category = 'Finance.Financials'
 
     def __init__(self, scene):
-        super().__init__(scene, inputs=[1, '#D406D7'], outputs=[])
+        super().__init__(scene, inputs=[1, '#D406D7', 5], outputs=[])
 
     def initSettings(self):
         super().initSettings()
@@ -260,8 +273,8 @@ class KelebekTestNode(KelebekNode):
         self.value = val
         self.eval()
 
-    def evalOperation(self, *args):
-        print(Fore.GREEN, 'TEST NODE ARGS: ', args)
+    def evalOperation(self, *args, **kwargs):
+        print(Fore.GREEN, 'TEST NODE ARGS: ', args, 'KWARGS: ', kwargs)
         # for arg in args:
         #     if isinstance(arg, Future):
         #         arg = arg.result()
@@ -290,6 +303,32 @@ class KelebekTestNode(KelebekNode):
         self.grNode.setToolTip("")
 
         return self.value
+
+
+@register_node()
+class KelebekRandNode(KelebekNode):
+    op_code = 4
+    op_title = "Random Number"
+    content_label = ""
+    content_label_objname = "Rand_num_gen"
+    category = 'Finance.Financials'
+
+    def __init__(self, scene):
+        super().__init__(scene, inputs=[], outputs=[1])
+
+    def initInnerClasses(self):
+        # self.content = KelebekTestNodeContent(self)
+        self.grNode = KelebekGraphicsNode(self)
+        # self.content.run_nodes.clicked.connect(self.clk_btn)
+
+    def evalOperation(self, input1, input2):
+        from random import randint
+        num = randint(0, 20)
+        return num
+
+    def evalImplementation(self):
+        x = self.evalOperation(None, None)
+        return x
 
 
 class KelebekTestNodeContent(QDMNodeContentWidget):

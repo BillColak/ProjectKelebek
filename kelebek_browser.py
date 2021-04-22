@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWebChannel import QWebChannel
 from jinja2 import Template
-# import os
+import os
 
 from kelebek_conf import *
 

@@ -1,6 +1,6 @@
 
 from PyQt5.QtCore import *
-from kelebek_conf import *
+from kelebek_conf import register_node
 from kelebek_node_base import *
 from nodeeditor.utils import dumpException
 from colorama import Fore
@@ -29,10 +29,10 @@ class KelebekStoreContent(QDMNodeContentWidget):
         return res
 
 
-@register_node2(OP_NODE_STORE, 'Output')
+@register_node()
 class KelebekNodeStore(KelebekNode):
     # icon = "icons/out.png"
-    op_code = OP_NODE_STORE
+    op_code = 2
     op_title = "Store Output"
     content_label_objname = "kelebek_node_store"
     category = "Output"

@@ -79,6 +79,25 @@ class FactoryNode(KelebekNode):
     def __init__(self, scene):
         super().__init__(scene, inputs=[], outputs=[1])
 
+    def addSocket(self, socket):
+        if socket.is_input:
+            self.inputs.append(socket)
+            self.named_inputs[self.inputs.index(socket)] = socket
+        else:
+            self.outputs.append(socket)
+            self.named_outputs[self.outputs.index(socket)] = socket
+        if isinstance(self.grNode, FactoryGraphicsNode):
+            self.grNode.adjust_socket_pos()
+
+    def getNamedInputs(self):
+        ins = {}
+        for name, socket in self.named_inputs.items():
+            connections = ins[socket.name] = []
+            for edge in socket.edges:
+                other_socket = edge.getOtherSocket(socket)
+                connections.append(other_socket.node)
+        return ins
+
     def initInnerClasses(self):
         # self.content = FactoryNodeContent(self)
         self.grNode = FactoryGraphicsNode(self)
@@ -92,17 +111,20 @@ class FactoryNode(KelebekNode):
 
     def evalOperation(self, *args, **kwargs):
         print(Fore.BLUE, 'FACTORY INPUT:', args, kwargs)
-        return 123
+        return args, kwargs
 
     def evalImplementation(self):
-        ins = {}
-        for index, socket in enumerate(self.inputs):
-            inp: list = [i.eval() for i in self.getInputs(index)]
-            # todo if there is no name for more than one node this code will blow up.
-            s_name: str = str(socket.name)
-            ins[s_name] = inp
-        val = self.evalOperation(**ins)
-        return val
+        i = {name: [i.eval() for i in node] for name, node in self.getNamedInputs().items()}
+        x = self.evalOperation(**i)
+        return x
+        # ins = {}
+        # for index, socket in enumerate(self.inputs):
+        #     inp: list = [i.eval() for i in self.getInputs(index)]
+        #     # todo if there is no name for more than one node this code will blow up.
+        #     s_name: str = str(socket.name)
+        #     ins[s_name] = inp
+        # val = self.evalOperation(**ins)
+        # return val
 
     def serialize(self):
         res = super().serialize()

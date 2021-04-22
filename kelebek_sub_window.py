@@ -117,7 +117,6 @@ class KelebekSubWindow(NodeEditorWidget):
                 self.handleNodeContextMenu(event)
             elif hasattr(item, 'edge'):
                 self.handleEdgeContextMenu(event)
-            #elif item is None:
             else:
                 self.handleNewNodeContextMenu(event)
 

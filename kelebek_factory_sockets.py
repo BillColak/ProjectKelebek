@@ -21,7 +21,8 @@ class SocketInput(QWidget):
             socket_type=self.socket_type, multi_edges=self.node.input_multi_edged,
             count_on_this_node_side=len(self.node.inputs) + 1, is_input=True, name=self.name
         )
-        self.node.inputs.append(self.socket)
+        # self.node.inputs.append(self.socket)
+        self.node.addSocket(self.socket)
         self.index = self.socket.socket_index
 
         self.layout = QHBoxLayout(self)
@@ -64,6 +65,7 @@ class SocketInput(QWidget):
     def socket_name_changed(self, s):
         self.name = str(s)
         self.socket.grSocket.setSocketTitle(str(s))
+        print(self.name, self.node.named_inputs)
 
 
 class FactorySocketHandler(QWidget):

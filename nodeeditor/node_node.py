@@ -56,6 +56,8 @@ class Node(Serializable):
         # create socket for inputs and outputs
         self.inputs = []
         self.outputs = []
+        self.named_inputs = {}
+        self.named_outputs = {}
         self.initSockets(inputs, outputs)
 
         # dirty and evaluation
@@ -100,6 +102,26 @@ class Node(Serializable):
         """
         self.grNode.setPos(x, y)
 
+    # todo robust me
+    def addSocket(self, socket: Socket):
+        if socket.is_input:
+            self.inputs.append(socket)
+            self.named_inputs[socket.name] = socket
+        else:
+            self.outputs.append(socket)
+            self.named_outputs[socket.name] = socket
+        if isinstance(self.grNode, QDMGraphicsNode):
+            self.grNode.move_sockets()
+
+    def getNamedInputs(self):
+        ins = {}
+        for name, socket in self.named_inputs.items():
+            connections = ins[name] = []
+            for edge in socket.edges:
+                other_socket = edge.getOtherSocket(socket)
+                # ins[name] = other_socket.node
+                connections.append(other_socket.node)
+        return ins
 
     def initInnerClasses(self):
         """Sets up graphics Node (PyQt) and Content Widget"""
@@ -162,7 +184,8 @@ class Node(Serializable):
                 count_on_this_node_side=len(inputs), is_input=True
             )
             counter += 1
-            self.inputs.append(socket)
+            # self.inputs.append(socket)
+            self.addSocket(socket)
 
         counter = 0
         for item in outputs:
@@ -172,7 +195,9 @@ class Node(Serializable):
                 count_on_this_node_side=len(outputs), is_input=False
             )
             counter += 1
-            self.outputs.append(socket)
+            self.addSocket(socket)
+            # self.outputs.append(socket)
+
 
 
     def onEdgeConnectionChanged(self, new_edge: 'Edge'):
@@ -518,6 +543,7 @@ class Node(Serializable):
             other_socket = edge.getOtherSocket(self.outputs[index])
             outs.append(other_socket.node)
         return outs
+
 
 
     # serialization functions

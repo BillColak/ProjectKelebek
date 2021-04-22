@@ -84,6 +84,7 @@ class KelebekNode(Node):
         self.fut = Future()
         # self.fut.add_done_callback(self.finished)
         self.markDirty()
+
         # TODO Future exceptions.
         # TODO if xpath is not valid. User should click eval after confirming.->remove the marking shit from contextmenu
         # TODO Node tooltips.
