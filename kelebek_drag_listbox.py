@@ -5,10 +5,6 @@ from PyQt5.QtWidgets import *
 from kelebek_conf import *
 from nodeeditor.utils import dumpException
 
-# TODO keep in mind whatever changes made to listbox/treeview will also impact the context managers.
-# TODO research making node designer like qt designer, where people can make their own custom nodes.
-#   as well as the theme of the app.
-
 
 class QDMDragListbox(QListWidget):
     def __init__(self, parent=None):

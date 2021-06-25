@@ -67,7 +67,7 @@ class CustomNode(KelebekNode):
     def evalImplementation(self):
         # todo only accepts(edge connections) with predetermined types of inputs? int, str, etc..?
         # i = {name: node for name, node in self.getNamedInputs().items()} # --> show socket name + connections.
-        i = {name: [i.eval() for i in node] for name, node in self.getNamedInputs().items()}
+        i = {name: [i.eval() for i in node] for name, node in self.getAllInputs().items()}
         x = self.evalOperation(**i)
         return x
 
@@ -102,5 +102,5 @@ for item in custom_nodes:
     data_ = loadFromFile(item)
     custom_node = factory(CustomNode, data_, o)
     register_node()(custom_node)
-    o += 12
+    o += 1
 

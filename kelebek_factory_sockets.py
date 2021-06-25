@@ -65,7 +65,7 @@ class SocketInput(QWidget):
     def socket_name_changed(self, s):
         self.name = str(s)
         self.socket.grSocket.setSocketTitle(str(s))
-        print(self.name, self.node.named_inputs)
+        print(self.name, self.node.inputs)
 
 
 class FactorySocketHandler(QWidget):

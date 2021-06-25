@@ -46,6 +46,7 @@ def register_node_now(class_reference):
                 op_code, class_reference, KELEBEK_NODES[op_code]
             ))
         category_placement[op_code] = class_reference
+        # if op_code < 12:
         KELEBEK_NODES[op_code] = class_reference
         # print(op_code, class_reference.op_title, class_reference.category, category_placement)
 

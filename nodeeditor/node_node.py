@@ -56,8 +56,8 @@ class Node(Serializable):
         # create socket for inputs and outputs
         self.inputs = []
         self.outputs = []
-        self.named_inputs = {}
-        self.named_outputs = {}
+        # self.named_inputs = {}
+        # self.named_outputs = {}
         self.initSockets(inputs, outputs)
 
         # dirty and evaluation
@@ -106,20 +106,17 @@ class Node(Serializable):
     def addSocket(self, socket: Socket):
         if socket.is_input:
             self.inputs.append(socket)
-            self.named_inputs[socket.name] = socket
         else:
             self.outputs.append(socket)
-            self.named_outputs[socket.name] = socket
         if isinstance(self.grNode, QDMGraphicsNode):
             self.grNode.move_sockets()
 
-    def getNamedInputs(self):
+    def getAllInputs(self):
         ins = {}
-        for name, socket in self.named_inputs.items():
-            connections = ins[name] = []
+        for socket in self.inputs:
+            connections = ins[socket.name] = []
             for edge in socket.edges:
                 other_socket = edge.getOtherSocket(socket)
-                # ins[name] = other_socket.node
                 connections.append(other_socket.node)
         return ins
 

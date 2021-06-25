@@ -1,10 +1,14 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
+from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView, QWebEngineSettings
 from PyQt5.QtWebChannel import QWebChannel
 from jinja2 import Template
 import os
 
 from kelebek_conf import *
+
+# DEBUG_PORT = '5588'
+# DEBUG_URL = 'http://127.0.0.1:%s' % DEBUG_PORT
+# os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = DEBUG_PORT
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -179,6 +183,7 @@ class QtBrowserWidget(QtWidgets.QWidget):
         self.browser.load(QtCore.QUrl(HOME))
 
     def navigate_home(self):
+        # breakpoint()
         self.browser.setUrl(QtCore.QUrl(HOME))
 
     def navigate_to_url(self):
@@ -232,11 +237,12 @@ class QtBrowserWidget(QtWidgets.QWidget):
 class QuteBrowser(QWebEngineView):
     def __init__(self, *args, **kwargs):
         super(QuteBrowser, self).__init__(*args, **kwargs)
+
+        # self.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)  # --> why do I need this again?
+        # self.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+
         self.value = None
-
         self.scene = None
-        # print('SELF.SCENE: ', self.scene)
-
         self.initNewNodeActions()
 
     def initNewNodeActions(self):
@@ -247,12 +253,18 @@ class QuteBrowser(QWebEngineView):
             node = KELEBEK_NODES[key]
             self.node_actions[node.op_code] = QtWidgets.QAction(QtGui.QIcon(node.icon), node.op_title)
             self.node_actions[node.op_code].setData(node.op_code)
+        # self.node_actions[QWebEnginePage.InspectElement] = QtWidgets.QAction('Inspect Element')
+        # self.node_actions[QWebEnginePage.InspectElement].setData(QWebEnginePage.InspectElement)
 
     def initNodesContextMenu(self):
         context_menu = QtWidgets.QMenu(self)
-        keys = list(KELEBEK_NODES.keys())
+        # context_menu = QWebEnginePage.createStandardContextMenu(self.page())
+        keys = list(KELEBEK_NODES.keys())  # todo only include web node and not "Display output"
         keys.sort()
         for key in keys: context_menu.addAction(self.node_actions[key])
+        # context_menu.addSeparator()
+        # context_menu.addAction(self.node_actions[26])
+        # context_menu.addSeparator()
         return context_menu
 
     # def initNodesContextMenu(self):
@@ -263,19 +275,19 @@ class QuteBrowser(QWebEngineView):
     #     # for key in keys: context_menu.addAction(self.node_actions[key])
     #     return context_menu
 
-    def createContextMenu(self, parent, values):  # tODO make sure only web related nodes are allowed in the browser
-        if isinstance(values, dict):
-            for key, value in values.items():
-                # NODES:
-                if isinstance(key, int):
-                    node = value
-                    action = QtWidgets.QAction(QtGui.QIcon(node.icon), node.op_title)
-                    action.setData(node.op_code)
-                    parent.addAction(action)
-                else:
-                    menu = QtWidgets.QMenu(key)
-                    parent.addMenu(menu)
-                    self.createContextMenu(menu, value)
+    # def createContextMenu(self, parent, values):
+    #     if isinstance(values, dict):
+    #         for key, value in values.items():
+    #             # NODES:
+    #             if isinstance(key, int):
+    #                 node = value
+    #                 action = QtWidgets.QAction(QtGui.QIcon(node.icon), node.op_title)
+    #                 action.setData(node.op_code)
+    #                 parent.addAction(action)
+    #             else:
+    #                 menu = QtWidgets.QMenu(key)
+    #                 parent.addMenu(menu)
+    #                 self.createContextMenu(menu, value)
 
     def handleNewNodeContextMenu(self, event):
         import random
@@ -286,7 +298,12 @@ class QuteBrowser(QWebEngineView):
 
         if action is not None:
             if self.scene is not None:
-                new_kelebek_node = get_class_from_opcode(action.data())(self.scene)
+                op_code = action.data()
+                # if op_code == 26:
+                #     # self.page().setInspectedPage(self.page())
+                #     pass
+                # else:
+                new_kelebek_node = get_class_from_opcode(op_code)(self.scene)
                 new_kelebek_node.setPos(x, y)
                 try:
                     print('Node Value: ', self.value)
@@ -295,13 +312,39 @@ class QuteBrowser(QWebEngineView):
                 except Exception as e:
                     print('Error inserting text.', e)
                 self.scene.history.storeHistory("Created %s" % new_kelebek_node.__class__.__name__)
+
             else:
                 print('SCENE IS NONE')
 
     def contextMenuEvent(self, event):
+        # menu = QWebEnginePage.createStandardContextMenu(self.page())
         # If there is not scene opened do not allow for context menu.
         if self.scene:
             self.handleNewNodeContextMenu(event)
         # else:
         #     super().contextMenuEvent(event)
+
+
+class InspectorDialog(QDialog):
+
+    def __init__(self, browser, *args, **kwargs):
+        QDialog.__init__(self, *args, **kwargs)
+
+        self.browser = browser
+
+        self.setGeometry(QRect(200, 200, 500, 500))
+        self.setWindowTitle("DevTools")
+
+        self.browser.loadFinished.connect(self.handleLoaded)
+
+        self.inspector = QWebEngineView()
+        # self.inspector.load(QUrl(DEBUG_URL))
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(self.inspector)
+
+    def handleLoaded(self, ok):
+        if ok:  #
+            self.browser.page().setDevToolsPage(self.inspector.page())
+
+
 

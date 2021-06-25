@@ -157,6 +157,11 @@ class KelebekWindow(NodeEditorWindow):
         self.file.triggered.connect(self.window1)
         self.navtb.addSeparator()
 
+        # self.dev_tools = QAction(QIcon('images/DevTools.png'), 'DevTools', self)
+        # self.navtb.addAction(self.dev_tools)
+        # self.dev_tools.triggered.connect(self.inspectorDialog)
+        # self.navtb.addSeparator()
+
         self.filetree = QAction(QIcon('images/diagram-3-fill.svg'), "Node Editor", self)
         self.navtb.addAction(self.filetree)
         self.filetree.triggered.connect(self.window2)
@@ -181,8 +186,6 @@ class KelebekWindow(NodeEditorWindow):
         self.navtb.addAction(self.factory_btn)
         self.factory_btn.triggered.connect(self.window3)
         self.navtb.addSeparator()
-
-    # def
 
     # def print_editor_widget(self):
         # KEEP THESE AS A REFERENCE
@@ -214,6 +217,10 @@ class KelebekWindow(NodeEditorWindow):
 
     def window3(self):
         self.stackedlay.setCurrentIndex(2)
+
+    # def inspectorDialog(self):
+    #     self.inspector_dialog = InspectorDialog(self.browser)
+    #     self.inspector_dialog.show()
 
     def closeEvent(self, event):
         self.mdiArea.closeAllSubWindows()

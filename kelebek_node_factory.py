@@ -75,22 +75,25 @@ class FactoryView(QWidget):
         splitter2.addWidget(sockethandler)
         splitter2.setStretchFactor(0, 1)
         splitter2.setStretchFactor(1, 4)
-        splitter2.setStretchFactor(2, 10)
+        splitter2.setStretchFactor(2, 14)
         splitter1.addWidget(splitter2)
 
         self.layout.addWidget(splitter1)
         highlighter.save_signal.connect(self.saveNode)
-        highlighter.emit_eval.connect(self.saveNode)
+        highlighter.emit_eval.connect(self.eval_text)
 
         self.scene.addDragEnterListener(self.onDragEnter)
         self.scene.addDropListener(self.onDrop)
 
     def eval_text(self, s):
-        try:
-            evaluation = eval(s)
-            print(evaluation)
-        except Exception as e:
-            print("Exception:", e)
+        # todo setting operation attribute and evaluation should be robust, friendly and not prone to errors.
+        setattr(self.node, 'operation', str(s))
+        print("setting attrib:", str(s))
+        # try:
+        #     evaluation = eval(s)
+        #     print(evaluation)
+        # except Exception as e:
+        #     print("Exception:", e)
 
     def saveNode(self, s):
         custom_nodes = os.path.join(os.path.dirname(__file__), "customnodes")

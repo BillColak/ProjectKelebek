@@ -82,21 +82,10 @@ class FactoryNode(KelebekNode):
     def addSocket(self, socket):
         if socket.is_input:
             self.inputs.append(socket)
-            self.named_inputs[self.inputs.index(socket)] = socket
         else:
             self.outputs.append(socket)
-            self.named_outputs[self.outputs.index(socket)] = socket
         if isinstance(self.grNode, FactoryGraphicsNode):
             self.grNode.adjust_socket_pos()
-
-    def getNamedInputs(self):
-        ins = {}
-        for name, socket in self.named_inputs.items():
-            connections = ins[socket.name] = []
-            for edge in socket.edges:
-                other_socket = edge.getOtherSocket(socket)
-                connections.append(other_socket.node)
-        return ins
 
     def initInnerClasses(self):
         # self.content = FactoryNodeContent(self)
@@ -110,12 +99,22 @@ class FactoryNode(KelebekNode):
         self.output_multi_edged = True
 
     def evalOperation(self, *args, **kwargs):
-        print(Fore.BLUE, 'FACTORY INPUT:', args, kwargs)
-        return args, kwargs
+
+        if hasattr(self, 'operation'):
+            op = str(self.operation)
+
+
+            # for name, val in kwargs.items():
+            #     locals()[name] = val
+            # print(locals())
+            # x = eval(op, None)
+            print(Fore.BLUE, 'FACTORY INPUT:', args, kwargs, 'operation:', op, f'list(map({op}, {kwargs}))')
+            return args, kwargs
 
     def evalImplementation(self):
-        i = {name: [i.eval() for i in node] for name, node in self.getNamedInputs().items()}
+        i = {name: [i.eval() for i in node] for name, node in self.getAllInputs().items()}
         x = self.evalOperation(**i)
+        # print(Fore.CYAN, locals())
         return x
         # ins = {}
         # for index, socket in enumerate(self.inputs):
