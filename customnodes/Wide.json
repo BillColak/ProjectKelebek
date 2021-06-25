@@ -1,0 +1,42 @@
+{
+    "id": 103630904,
+    "title": "Wide",
+    "pos_x": -284.0,
+    "pos_y": -183.0,
+    "inputs": [
+        {
+            "id": 103725616,
+            "index": 0,
+            "multi_edges": true,
+            "position": 2,
+            "socket_type": "#00aa7f",
+            "socket_name": "input1"
+        },
+        {
+            "id": 486514136,
+            "index": 1,
+            "multi_edges": true,
+            "position": 2,
+            "socket_type": "#0000ff",
+            "socket_name": "input2"
+        }
+    ],
+    "outputs": [
+        {
+            "id": 103653800,
+            "index": 0,
+            "multi_edges": true,
+            "position": 5,
+            "socket_type": 1,
+            "socket_name": ""
+        }
+    ],
+    "content": {},
+    "op_code": 13,
+    "color": "#ffaaff",
+    "width": 636,
+    "height": 165,
+    "shape": "rounded rectangle",
+    "operation": "input1**input2",
+    "category": "Factory Nodes"
+}

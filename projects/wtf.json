@@ -1,0 +1,28 @@
+{
+    "id": 243121360,
+    "scene_width": 64000,
+    "scene_height": 64000,
+    "nodes": [
+        {
+            "id": 399220896,
+            "title": "Purple",
+            "pos_x": -769.0,
+            "pos_y": -387.0,
+            "inputs": [],
+            "outputs": [],
+            "content": {},
+            "op_code": 12
+        },
+        {
+            "id": 399221184,
+            "title": "Wide",
+            "pos_x": -15.0,
+            "pos_y": -387.0,
+            "inputs": [],
+            "outputs": [],
+            "content": {},
+            "op_code": 13
+        }
+    ],
+    "edges": []
+}
