@@ -46,3 +46,231 @@ QDMNodeContentWidget QLineEdit#Kelebek_node_test {
 QGraphicsView {
   selection-background-color: #fff;
 }
+
+QScrollArea {
+  border: none;
+  background: rgb(45, 45, 68);
+}
+
+QScrollBar:vertical {
+	border: none;
+    background: rgb(45, 45, 68);
+    width: 14px;
+    margin: 15px 0 15px 0;
+	border-radius: 0px;
+ }
+
+/*  HANDLE BAR VERTICAL */
+QScrollBar::handle:vertical {
+	background-color: #51CD47;
+	min-height: 30px;
+	border-radius: 7px;
+}
+QScrollBar::handle:vertical:hover{
+	background-color: #51CD47;
+}
+QScrollBar::handle:vertical:pressed {
+	background-color: #51CD47;
+}
+
+/* BTN TOP - SCROLLBAR */
+QScrollBar::sub-line:vertical {
+	border: none;
+	background-color: rgb(59, 59, 90);
+	height: 15px;
+	border-top-left-radius: 7px;
+	border-top-right-radius: 7px;
+	subcontrol-position: top;
+	subcontrol-origin: margin;
+}
+QScrollBar::sub-line:vertical:hover {
+	background-color: #51CD47;
+}
+QScrollBar::sub-line:vertical:pressed {
+	background-color: #51CD47;
+}
+/* BTN BOTTOM - SCROLLBAR */
+QScrollBar::add-line:vertical {
+	border: none;
+	background-color: rgb(59, 59, 90);
+	height: 15px;
+	border-bottom-left-radius: 7px;
+	border-bottom-right-radius: 7px;
+	subcontrol-position: bottom;
+	subcontrol-origin: margin;
+}
+QScrollBar::add-line:vertical:hover {
+	background-color: #51CD47;
+}
+QScrollBar::add-line:vertical:pressed {
+	background-color: #51CD47;
+}
+/* RESET ARROW */
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+	background: none;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+	background: none;
+}
+
+
+/* HORIZONTAL SCROLLBAR - HOMEWORK */
+QScrollBar:horizontal {
+	border: none;
+    background: #51CD47;
+    width: 14px;
+    margin: 15px 0 15px 0;
+	border-radius: 0px;
+}
+
+QScrollBar::handle:horizontal {
+	background-color: #51CD47;
+	min-height: 30px;
+	border-radius: 7px;
+}
+QScrollBar::add-line:horizontal {
+	border: none;
+	background-color: #51CD47;
+	height: 15px;
+	border-bottom-left-radius: 7px;
+	border-bottom-right-radius: 7px;
+	subcontrol-position: bottom;
+	subcontrol-origin: margin;
+}
+QScrollBar::sub-line:horizontal {
+	border: none;
+	background-color: #51CD47;
+	height: 15px;
+	border-top-left-radius: 7px;
+	border-top-right-radius: 7px;
+	subcontrol-position: top;
+	subcontrol-origin: margin;
+}
+QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal
+{
+	background: none;
+}
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal
+{
+	background: none;
+}
+
+
+QCheckBox {
+    color: white;
+    height: 15px;
+    spacing: 5px;
+}
+
+
+QCheckBox:hover {
+    outline: none;
+    color: white;
+    background-color: #94b30f; /* same as QMenu::item:selected and QMenu::item:pressed */
+}
+
+
+QRadioButton::indicator:unchecked{
+    color: white;
+    background-color: rgba(0, 0, 0, 20);
+    border: 1px solid #505050;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #94b30f; /* QCheckBox has the same color */
+    border: 1px solid #819c0c; /* QCheckBox has the same color */
+    image:url(images/radiobutton_light.png);
+}
+
+QRadioButton,
+QRadioButton:disabled {
+    color: white;
+    padding: 3px;
+    outline: none;
+    background-color: transparent;
+}
+
+QRadioButton::indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 6px;
+}
+
+QRadioButton::indicator:pressed {
+    border-color: #c5d675;
+}
+
+QRadioButton::indicator:disabled {
+    color: white;
+    background-color: transparent;
+    border: 1px solid #6e6e6e;
+}
+
+QRadioButton:focus {
+    border: none;
+}
+
+QComboBox {
+    color: white;
+    background-color: #5a5a5a;
+    selection-color: white;
+    selection-background-color: #51CD47;
+    border: 1px solid #5a5a5a;
+    border-radius: 3px;
+    min-width: 50px;
+    min-height: 20px;
+    padding: 1px 2px;
+}
+
+QComboBox:focus {
+    color: black;
+    border-color: #a5c61a;
+    border-right-color: qlineargradient(spread:pad, x1:1, y1:0.8, x2:1, y2:0, stop:0 #94b30f, stop:1 #a5c61a); /* same as up/down or drop-down button color */
+    background-color: #dadfc5;
+}
+
+QComboBox::drop-down {
+    background-color: #505050; /* same color as up/down QSpinBox ... QDateTimeView background-color */
+    subcontrol-origin: border; /* important */
+    subcontrol-position: top right;
+    width: 20px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+QComboBox::drop-down:on,
+QComboBox::drop-down:focus {
+    background-color: qlineargradient(spread:pad, x1:1, y1:0.8, x2:1, y2:0, stop:0 #94b30f, stop:1 #a5c61a);
+}
+
+QComboBox::down-arrow {
+    image: url(images/down_arrow_light.png);
+}
+
+QComboBox::down-arrow:on,
+QComboBox::down-arrow:focus {
+    image: url(images/down_arrow_lighter.png);
+}
+
+QComboBox::down-arrow:off,
+QComboBox::down-arrow:disabled {
+    image: url(images/down_arrow_disabled_dark.png);
+}
+
+/* ComboBox menu */
+QComboBox {
+    selection-color: white;
+    selection-background-color: #51CD47;
+}
+
+QComboBox QAbstractItemView {
+    color: #bebebe; /* same as regular QComboBox color */
+    background-color: transparent;
+    selection-color: white;
+    selection-background-color: #51CD47;
+    border-width: 5px 0px 5px 0px;
+    border-style: solid;
+    border-color: transparent;
+    margin: 0px -1px 0px 0px; /* hack for Mac... try it on Windows and Linux */
+}
+

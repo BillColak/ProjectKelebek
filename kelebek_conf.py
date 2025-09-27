@@ -25,6 +25,7 @@ KELEBEK_NODES2 = {'Web Navigation': dict(),
                   },
                   'Output': dict(),
                   'Factory Nodes': dict(),
+                  'XBRLORER': dict(),
                   }
 
 
@@ -94,3 +95,4 @@ from nodes.input import *
 from nodes.operations import *
 from nodes.output import *
 from nodes.custom_nodes import *
+from nodes.xbrlorerNodes import *

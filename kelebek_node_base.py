@@ -11,6 +11,7 @@ from colorama import Fore
 import inspect
 from concurrent.futures import Future
 # from WaitingSpinnerWidget import QtWaitingSpinner
+import os
 from kelebek_multithreading import run_simple_thread
 DEBUG = False
 
@@ -116,12 +117,15 @@ class KelebekNode(Node):
         else:
             print(Fore.BLUE, "This node does not have any outputs. OR something else happened", self.__class__.__name__)
 
-    def evalOperation(self, input1, input2):
+    def evalOperation(self, input1, input2):  # todo shouldn't this be *args
         return 123
 
     def evalImplementation(self):
         i1 = self.getInput(0)
-        v1 = self.content.edit.text()
+        if hasattr(self.content, 'edit'):
+            v1 = self.content.edit.text()
+        else:
+            v1 = None
         # self.content.edit.setText()
 
         if i1 is None:
@@ -213,3 +217,30 @@ class KelebekNode(Node):
         res = super().deserialize(data, hashmap, restore_id)
         print("Deserialized KelebekNode '%s'" % self.__class__.__name__, "res:", res)
         return res
+
+
+# class IconLineEdit(QLineEdit):
+#     def __init__(self, content, parent, icon: str = None, action: QAction = None, *args, **kwargs):
+#         super().__init__(content, parent)
+#
+#         self.icon = QIcon(icon) if icon else QIcon('icons/folder-fill.svg')
+#         self.action = action if action else QAction(self.icon, '&open', parent, triggered=self.onFileOpen)
+#
+#         self.addAction(self.action, self.TrailingPosition)
+#         self.setAlignment(Qt.AlignLeft)
+#
+#     def onFileOpen(self):
+#         """Handle File Open operation"""
+#         fname, filter = QFileDialog.getOpenFileName(self, 'Open graph from file', self.getFileDialogDirectory(),
+#                                                     self.getFileDialogFilter())
+#         if fname != '' and os.path.isfile(fname):
+#             self.setText(fname)
+#
+#     def getFileDialogFilter(self):
+#         """Returns ``str`` standard file open/save filter for ``QFileDialog``"""
+#         return 'Graph (*.xml);;All files (*)'
+#
+#     def getFileDialogDirectory(self):
+#         """Returns starting directory for ``QFileDialog`` file open/save"""
+#         return ''
+

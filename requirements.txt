@@ -1,4 +1,4 @@
-
+# Kelebek Modules
 aiohttp==3.7.4.post0
 Jinja2==2.11.3
 requests==2.25.1
@@ -7,3 +7,33 @@ colorama==0.4.4
 PyQt5==5.15.0
 PyQtWebEngine==5.15.0
 PyQtChart==5.15.0
+
+# Arelle Modules
+# core modules
+# (deduplicated lxml entry)
+openpyxl>=2.3.3
+regex
+isodate
+aniso8601
+cherrypy
+cheroot
+# special note: if pycountry fails to build, try: pip install --no-cache-dir --use-pep517 pycountry
+pycountry
+# plugins
+# EdgarRenderer plugin
+numpy
+matplotlib
+holidays
+tornado
+# security plugin (pycrypto is deprecated — use pycryptodome instead)
+pycryptodome
+# xbrlDB plugin
+pg8000
+pymysql
+pyodbc
+rdflib
+# other
+graphviz
+pillow
+# freezing
+cx-Freeze

@@ -57,7 +57,9 @@ class QDMGraphicsNode(QGraphicsItem):
     @title.setter
     def title(self, value):
         self._title = value
-        self.title_item.setPlainText(self._title)
+        motharchod = QFontMetrics(self.title_item.font())
+        ltxt = QFontMetrics.elidedText(motharchod, value, Qt.ElideRight, self.title_item.textWidth())
+        self.title_item.setPlainText(ltxt)
 
     def initUI(self):
         """Set up this ``QGraphicsItem``"""
@@ -191,7 +193,7 @@ class QDMGraphicsNode(QGraphicsItem):
         """Set up the `grContent` - ``QGraphicsProxyWidget`` to have a container for `Graphics Content`"""
         if self.content is not None:
             self.content.setGeometry(self.edge_padding, self.title_height + self.edge_padding,
-                                 self.width - 2 * self.edge_padding, self.height - 2 * self.edge_padding - self.title_height)
+                                     self.width - 2 * self.edge_padding, self.height - 2 * self.edge_padding - self.title_height)
 
         # get the QGraphicsProxyWidget when inserted into the grScene
         self.grContent = self.node.scene.grScene.addWidget(self.content)

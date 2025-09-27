@@ -166,7 +166,8 @@ class SimpleThread(QRunnable):
 
 
 def run_simple_thread(callback, return_output, *args, **kwargs):
-    worker = SimpleThread(callback, *args, **kwargs)
+    nargs = [i for i in args if i is not None]
+    worker = SimpleThread(callback, *nargs, **kwargs)
     if return_output:
         worker.signals.result.connect(return_output)
     QThreadPool.globalInstance().start(worker)
